@@ -142,7 +142,10 @@ def main(args):
     if ((config.BULK_QM_METHOD == "DFTB+") or (config.IGAS_QM_METHOD == "DFTB+")):
         config.DFTB_POSTPRC   = config.HPC_PYTHON + " " + config.DFTB_POSTPRC
     if ((config.BULK_QM_METHOD == "CP2K") or (config.IGAS_QM_METHOD == "CP2K")):
-        config.CP2K_POSTPRC   = config.HPC_PYTHON + " " + config.CP2K_POSTPRC        
+        config.CP2K_POSTPRC   = config.HPC_PYTHON + " " + config.CP2K_POSTPRC     
+    if ((config.BULK_QM_METHOD == "LMP") or (config.IGAS_QM_METHOD == "LMP")):
+        config.LMP_POSTPRC   = config.HPC_PYTHON + " " + config.LMP_POSTPRC        
+            
     
     if config.EMAIL_ADD:
         EMAIL_ADD = config.EMAIL_ADD    
@@ -521,10 +524,18 @@ def main(args):
                         Gaussian_exe   = config.GAUS_EXE,
                         Gaussian_scr   = config.GAUS_SCR,
                         Gaussian_nodes = config.GAUS_NODES,
-                        Gaussian_mem       = config.GAUS_MEM,
+                        Gaussian_mem   = config.GAUS_MEM,
                         Gaussian_ppn   = config.GAUS_PPN,
                         Gaussian_time  = config.GAUS_TIME,
-                        Gaussian_queue = config.GAUS_QUEUE,
+                        Gaussian_queue = config.GAUS_QUEUE,       
+                        LAMMPS_exe     = config.LMP_EXE,
+                        LAMMPS_units   = config.LMP_UNITS,
+                        LAMMPS_nodes   = config.LMP_NODES,
+                        LAMMPS_ppn     = config.LMP_PPN,
+                        LAMMPS_mem     = config.LMP_MEM,
+                        LAMMPS_time    = config.LMP_TIME,
+                        LAMMPS_queue   = config.LMP_QUEUE,
+                        LAMMPS_modules = config.LMP_MODULES,                      
                         job_ppn        = config.HPC_PPN,
                         job_account    = config.HPC_ACCOUNT,
                         job_system     = config.HPC_SYSTEM,
@@ -618,6 +629,7 @@ def main(args):
                     vasp_postproc = config.VASP_POSTPRC,
                     dftb_postproc = config.DFTB_POSTPRC, 
                     cp2k_postproc = config.CP2K_POSTPRC,
+                    lmp_postproc  = config.LMP_POSTPRC,
                     gaus_reffile  = config.GAUS_REF)
                     # gaus_postproc = config.GAUS_POSTPRC) -- this is unused
 
@@ -651,6 +663,8 @@ def main(args):
                 qm_all_path = config.WORKING_DIR + "/ALC-" + repr(THIS_ALC-1) + "/CP2K-all/"
             elif config.IGAS_QM_METHOD == "Gaussian":
                 qm_all_path = config.WORKING_DIR + "/ALC-" + repr(THIS_ALC-1) + "/GAUS-all/"
+            elif config.IGAS_QM_METHOD == "LMP":
+                qm_all_path = config.WORKING_DIR + "/ALC-" + repr(THIS_ALC-1) + "/LMP-all/"                
             else:
                 print("Error in main driver while building Amat: unkown IGAS QM method:", config.IGAS_QM_METHOD)
                 exit()
@@ -662,7 +676,10 @@ def main(args):
                 elif config.BULK_QM_METHOD == "DFTB+":
                     qm_20F_path = config.WORKING_DIR + "/ALC-" + repr(THIS_ALC-1) + "/DFTB-20/"  
                 elif config.BULK_QM_METHOD == "CP2K":
-                    qm_20F_path = config.WORKING_DIR + "/ALC-" + repr(THIS_ALC-1) + "/CP2K-20/"          
+                    qm_20F_path = config.WORKING_DIR + "/ALC-" + repr(THIS_ALC-1) + "/CP2K-20/"   
+                elif config.BULK_QM_METHOD == "LMP":
+                    qm_20F_path = config.WORKING_DIR + "/ALC-" + repr(THIS_ALC-1) + "/LMP-20/"          
+                           
                 else:
                     print("Error in main driver while building Amat: unkown BULK QM method:", config.BULK_QM_METHOD)
                     exit()
@@ -1045,7 +1062,15 @@ def main(args):
                         CP2K_time      = config.CP2K_TIME,
                         CP2K_queue     = config.CP2K_QUEUE,
                         CP2K_modules   = config.CP2K_MODULES,
-                        CP2K_data_dir  = config.CP2K_DATADIR,                                                
+                        CP2K_data_dir  = config.CP2K_DATADIR,  
+                        LAMMPS_exe     = config.LMP_EXE,
+                        LAMMPS_units   = config.LMP_UNITS,
+                        LAMMPS_nodes   = config.LMP_NODES,
+                        LAMMPS_ppn     = config.LMP_PPN,
+                        LAMMPS_mem     = config.LMP_MEM,
+                        LAMMPS_time    = config.LMP_TIME,
+                        LAMMPS_queue   = config.LMP_QUEUE,
+                        LAMMPS_modules = config.LMP_MODULES,                                                                       
                         Gaussian_exe   = config.GAUS_EXE,
                         Gaussian_scr   = config.GAUS_SCR,
                         Gaussian_nodes = config.GAUS_NODES,
@@ -1153,6 +1178,7 @@ def main(args):
                         vasp_postproc = config.VASP_POSTPRC,
                         dftb_postproc = config.DFTB_POSTPRC,
                         cp2k_postproc = config.CP2K_POSTPRC,
+                        lmp_postproc  = config.LMP_POSTPRC,
                         gaus_reffile  = config.GAUS_REF)
                         #gaus_postproc = config.GAUS_POSTPRC) -- this is unused
                         
@@ -1171,6 +1197,7 @@ def main(args):
                     vasp_postproc = config.VASP_POSTPRC,
                     dftb_postproc = config.DFTB_POSTPRC,
                     cp2k_postproc = config.CP2K_POSTPRC,
+                    lmp_postproc  = config.LMP_POSTPRC,
                     gaus_reffile  = config.GAUS_REF)
                     #gaus_postproc = config.GAUS_POSTPRC) -- this is unused
                         

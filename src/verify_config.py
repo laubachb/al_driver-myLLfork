@@ -110,6 +110,17 @@ def print_help():
     PARAM.append("GAUS_SCR");                       VARTYP.append("str");           DETAILS.append("Absolute path to Gaussian scratch directory")
     PARAM.append("GAUS_REF");                       VARTYP.append("str");           DETAILS.append("Name of file containing single atom energies from Gaussian and target planewave method")
 
+    PARAM.append("LMP_FILES");                     VARTYP.append("int");           DETAILS.append("Path to input files if using it as a refernce (\"QM\") method")
+    PARAM.append("LMP_NODES");                     VARTYP.append("int");           DETAILS.append("Number of nodes to use for LAMMPS jobs")
+ 
+    PARAM.append("LMP_POSTPRC");                   VARTYP.append("str");           DETAILS.append("Path to lmp2xyz.py")
+    PARAM.append("LMP_PPN");                       VARTYP.append("int");           DETAILS.append("Number of procs per node to use for LAMMPS jobs")
+    PARAM.append("LMP_TIME");                      VARTYP.append("str");           DETAILS.append("Walltime for LAMMPS calculations, e.g. \"04:00:00\"")
+    PARAM.append("LMP_QUEUE");                     VARTYP.append("str");           DETAILS.append("Queue to submit LAMMPS jobs to")
+    PARAM.append("LMP_EXE");                       VARTYP.append("str");           DETAILS.append("Absolute path to LAMMPS executable")
+    PARAM.append("LMP_MODULE");                    VARTYP.append("str");           DETAILS.append("System-specific modules needed to run LAMMPS")
+    PARAM.append("LMP_DATADIR");                   VARTYP.append("str");           DETAILS.append("Absolute path to CP2K scratch (\"data\") directory")
+
 
     print("Help info: ")
     print("Run with, e.g.: unbuffer python /path/to/al_driver/main.py 0 1 2 | tee driver.log")
@@ -216,7 +227,6 @@ def check_VASP(user_config):
         else:
             user_config.VASP_EXE = None
 
-
 def check_DFTB(user_config):
     
     """
@@ -319,7 +329,6 @@ def check_DFTB(user_config):
         else:
             user_config.DFTB_EXE = None
 
-
 def check_CP2K(user_config):
     
     """
@@ -333,7 +342,7 @@ def check_CP2K(user_config):
     
     if not hasattr(user_config,'CP2K_FILES'):
 
-        # Location of basic DFTB+ input files (dftb_in.hsd)
+        # Location of basic CP2K input files
 
         if ((user_config.BULK_QM_METHOD == "CP2K") or (user_config.IGAS_QM_METHOD == "CP2K")):
             print("WARNING: Option config.CP2K_FILES was not set")
@@ -422,8 +431,6 @@ def check_CP2K(user_config):
         else:
             user_config.CP2K_EXE = None    
     
-    
-
 def check_GAUS(user_config):
     
     """
@@ -523,6 +530,118 @@ def check_GAUS(user_config):
         else:
             user_config.GAUS_REF = None
 
+def check_LMP(user_config):
+    
+    """
+    
+    Checks whether settings for LAMMPS compatibility.
+    Produces warnings for un-initialized values if LMP is requested
+        
+    Usage: check_LMP(user_config)
+    
+    """    
+    
+    if not hasattr(user_config,'LMP_FILES'):
+
+        # Location of basic LAMMPS+ input files (data.header.in, data.footer.in, in.lammps)
+
+        if ((user_config.BULK_QM_METHOD == "LMP") or (user_config.IGAS_QM_METHOD == "LMP")):
+            print("WARNING: Option config.LMP_FILES was not set")
+            print("         Will use config.WORKING_DIR + \"ALL_BASE_FILES/QM_BASEFILES\"")
+
+        user_config.LMP_FILES = user_config.WORKING_DIR + "ALL_BASE_FILES/QM_BASEFILES"
+
+    if not hasattr(user_config,'LMP_UNITS'):
+
+        # Units LAMMPS will run with - REAL or METAL)
+
+        if ((user_config.BULK_QM_METHOD == "LMP") or (user_config.IGAS_QM_METHOD == "LMP")):
+            print("WARNING: Option config.LMP_UNITS was not set")
+            print("         Will use \"REAL\"")
+
+        user_config.LMP_UNITS = "REAL"
+    
+    if not hasattr(user_config,'LMP_POSTPRC'):
+
+        # Location of a LMP post-processing file
+
+        if ((user_config.BULK_QM_METHOD == "LMP") or (user_config.IGAS_QM_METHOD == "LMP")):
+            print("WARNING: Option config.LMP_POSTPRC was not set")
+            print("         Will use config.DRIVER_DIR + \"/src/lmp2xyz.py\"")
+
+        user_config.LMP_POSTPRC = user_config.DRIVER_DIR + "/src/lmp2xyz.py"            
+    
+    if not hasattr(user_config,'LMP_NODES'):
+
+        # Number of nodes to use for a LMP calculation
+
+        if ((user_config.BULK_QM_METHOD == "LMP") or (user_config.IGAS_QM_METHOD == "LMP")):
+            print("WARNING: Option config.LMP_NODES was not set")
+            print("         Will use a value of 1")
+
+        user_config.LMP_NODES = 1
+    
+    if not hasattr(user_config,'LMP_PPN'):
+
+        # Number of nodes to use for a LMP calculation
+        
+        if ((user_config.BULK_QM_METHOD == "LMP") or (user_config.IGAS_QM_METHOD == "LMP")):
+            print("WARNING: Option config.LMP_PPN was not set")
+            print("         Will use a value of 1")
+
+        user_config.LMP_PPN = 1      
+        
+    if not hasattr(user_config,'LMP_MEM'):
+
+        # Memory per node to use for a LMP calculation
+
+        if ((user_config.BULK_QM_METHOD == "LMP") or (user_config.IGAS_QM_METHOD == "LMP")):
+            print("WARNING: Option config.LMP_MEM was not set")
+            #print("         Will use a value of 128 (GB)")
+
+        user_config.LMP_MEM = ""                                  
+
+    if not hasattr(user_config,'LMP_TIME'):
+
+        # Time for a LMP calculation (hrs)
+
+        if ((user_config.BULK_QM_METHOD == "LMP") or (user_config.IGAS_QM_METHOD == "LMP")):
+            print("WARNING: Option config.LMP_TIME was not set")
+            print("         Will use a value of \"00:30:00\"")
+
+        user_config.LMP_TIME = "00:30:00"
+    
+    if not hasattr(user_config,'LMP_QUEUE'):
+
+        # Queue for a LMP calculation
+        
+        if ((user_config.BULK_QM_METHOD == "LMP") or (user_config.IGAS_QM_METHOD == "LMP")):
+            print("WARNING: Option config.LMP_QUEUE was not set")
+            print("         Will use pdebug")
+
+        user_config.LMP_QUEUE = "pdebug"
+    
+    if not hasattr(user_config,'LMP_MODULES'):
+
+        # Queue for a LMP calculation
+
+        if ((user_config.BULK_QM_METHOD == "LMP") or (user_config.IGAS_QM_METHOD == "LMP")):
+            print("WARNING: Option config.LMP_MODULES was not set")
+            print("         Will not load any default modules")
+
+        user_config.LMP_MODULES = None        
+    
+    if not hasattr(user_config,'LMP_EXE'):
+
+        # LMP executable
+        
+        if ((user_config.BULK_QM_METHOD == "LMP") or (user_config.IGAS_QM_METHOD == "LMP")):
+            print("ERROR: Option config.LMP_EXE was not set")
+            print("         Acceptable settings are of the form: \"/path/to/lmp\"")
+            exit()
+        else:
+            user_config.LMP_EXE = None    
+    
 def verify(user_config):
 
     """
@@ -1355,7 +1474,7 @@ def verify(user_config):
             
 
     ################################
-    ##### QM-Specific variables
+    ##### QM and Reference Method Specific Variables
     ################################
 
     if not hasattr(user_config,'BULK_QM_METHOD'):
@@ -1444,5 +1563,22 @@ def verify(user_config):
         user_config.GAUS_EXE     = None
         user_config.GAUS_SCR     = None
         user_config.GAUS_REF     = None
+
+    if (user_config.IGAS_QM_METHOD == "VASP") or (user_config.BULK_QM_METHOD == "LMP"):
+        check_LMP(user_config)
+    else:
+        user_config.LMP_POSTPRC = None
+        user_config.LMP_NODES   = None
+        user_config.LMP_PPN     = None 
+        user_config.LMP_MEM     = None 
+        user_config.LMP_TIME    = None
+        user_config.LMP_QUEUE   = None
+        user_config.LMP_MODULES = None
+        user_config.LMP_EXE     = None
+
+
+
+
+
 
 
