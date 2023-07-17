@@ -416,19 +416,11 @@ def post_process(*argv, **kwargs):
     
     if len(argv) == 3:
         args_cases    = argv[2]    
-    
-    ### ...kwargs
-    
-    default_keys   = [""]*1
-    default_values = [""]*1
 
-
-    # CP2K specific controls
-    
-    default_keys[0 ] = "cp2k_postproc"  ; default_values[0 ] = ""        # Parses a results.tag for E and stress tensor and detailed.out for forces     
-
-    args = dict(list(zip(default_keys, default_values)))
-    args.update(kwargs)    
+    ### ...kwargs -- unused
+    # CP2K specific controls -- unused
+    #args = dict(list(zip(default_keys, default_values)))
+    #args.update(kwargs)    
     
     ################################
 
