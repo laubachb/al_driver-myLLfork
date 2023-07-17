@@ -416,7 +416,7 @@ def post_process(*argv, **kwargs):
     
     if len(argv) == 3:
         args_cases    = argv[2]    
-    
+
     ### ...kwargs -- unused
     # CP2K specific controls -- unused
     #args = dict(list(zip(default_keys, default_values)))
