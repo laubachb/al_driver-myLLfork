@@ -33,19 +33,21 @@ def lmp_to_xyzf(units, trjfile, logfile): #, argv):
     #if len(sys.argv) == 5:
     #	SKIP = int(sys.argv[4])
     
-    print( "Processing files:         ")
-    print( "    trjfile:              " + trjfile)
-    print( "    logfile:              " + logfile)
-    print( "Writing output to:        " + outfile)
-    print( "Will use units:           " + units)
-    print( "Counted atoms:            " + `natoms`)
+    print( "\tProcessing files:         ")
+    print( "\t    trjfile:              " + trjfile)
+    print( "\t    logfile:              " + logfile)
+    print( "\tWriting output to:        " + outfile)
+    print( "\tWill use units:           " + units)
+    print( "\tCounted atoms:            " + str(natoms))
     
     # Specify conversion factors to get things in ChIMES xyzf file units:
     
-    econv = 1.0                     # For lammps units real (kcal/mol) to kcal/mol
-    fconv = 1.0/1.88973/627.509551  # For lammps units real (Kcal/mol/Ang) to H/Bohr
-    sconv = 0.000101325             # From lammps units real (atm) to GPa
-    
+    econv  = 1.0                     # For lammps units real (kcal/mol) to kcal/mol
+    fconv  = 1.0/1.88973/627.509551  # For lammps units real (Kcal/mol/Ang) to H/Bohr
+    sconv  = 0.000101325             # From lammps units real (atm) to GPa
+    gascon = 8.31446261815324        # m^3 Pa / K / mol 
+    mole   = 6.02E+23
+
     if units == "METAL":
         
         print("WARNING: Metal units functionality untested - check your results carefully and report back!")
@@ -53,8 +55,6 @@ def lmp_to_xyzf(units, trjfile, logfile): #, argv):
         econv  = 1.0/27.211399           # For lammps units metal (eV) to kcal/mol
         fconv  = 1.0/1.88973/27.211399   # For lammps units metal (eV/Ang) to H/Bohr
         sconv  = 0.0001                  # For lammps units metal (bar) to GPa
-        gascon = 8.31446261815324        # m^3 Pa / K / mol 
-        mole   = 6.02E+23
     
     
     # Count the number of stats lines in the log file - this should match the number of frames in the traj file
@@ -65,16 +65,20 @@ def lmp_to_xyzf(units, trjfile, logfile): #, argv):
     
     # Count the number of frames in the lammps file
             
-    frames        = helpers.wc_l(trjfile)/natoms
+    frames        = int(helpers.wc_l(trjfile)/(natoms+9))
     
     # Check that the number of lines/frames match
     
+    
+    
     if frames != nstat_lines:
         print("ERROR: Number of frames and number of stats lines in log.lammps do not match!")
+        print("Frames:", frames)
+        print("Stats: ", nstat_lines)
         exit()
     else:
-        print ("Counted frames:           " + `frames`)
-        print ("Printing every nth frame: " + `skip`)
+        print ("\tCounted frames:           " + str(frames))
+        print ("\tPrinting every nth frame: " + str(skip))
       
 
     # Grab the energy and stress data from the logfile
@@ -86,11 +90,11 @@ def lmp_to_xyzf(units, trjfile, logfile): #, argv):
     
     for i in range(len(stats)):
             
-        line = stats.split()
-            
+        line = stats[i].split()
+
         energy.append(line[3])  # Potential energy
         ptensor = line[7:13]    # Pressure tensor, not yet stress tensor!
-        ttensor = line[14:20])  # Temperature tensor, needed to compute the stress tensor
+        ttensor = line[14:20]   # Temperature tensor, needed to compute the stress tensor
         vol     = line[13]
         
         # Handle energy
@@ -101,11 +105,11 @@ def lmp_to_xyzf(units, trjfile, logfile): #, argv):
         
         for j in range(6):
             
-            ptensor[j] = float(ptensor[j]) * sconv)     # Convert to  GPa
+            ptensor[j] = float(ptensor[j]) * sconv          # Convert to  GPa
             
             ttensor[j]  = float(ttensor[j]) 
-            ttensor[j]  =  3/2 * gascon / mol * ttensor[j]   # Convert ttensor to KE (units: J)
-            ttensor[j] /= (float(vol)/1E30)*1E-9                # Convert KE to kinetic (IG) pressure (units: GPa)
+            ttensor[j]  =  3/2 * gascon / mole * ttensor[j] # Convert ttensor to KE (units: J)
+            ttensor[j] /= (float(vol)/1E30)*1E-9            # Convert KE to kinetic (IG) pressure (units: GPa)
             
             ttensor[j] = ptensor[j] - ttensor[j]            # Convert IG pressure to cold (Virial) pressure (units: GPa)
             
@@ -126,7 +130,7 @@ def lmp_to_xyzf(units, trjfile, logfile): #, argv):
     
     
     	if (i+1)%skip == 0:
-    		ofstream.write(`natoms` + '\n')
+    		ofstream.write(str(natoms) + '\n')
     		printed += 1
     	
     	# Ignore un-neded headers
@@ -139,9 +143,9 @@ def lmp_to_xyzf(units, trjfile, logfile): #, argv):
     	
     	# Save/print the box lengths
     	
-    	tmp_lx = IFSTREAM.readline().split()
-    	tmp_ly = IFSTREAM.readline().split()
-    	tmp_lz = IFSTREAM.readline().split()
+    	tmp_lx = ifstream.readline().split()
+    	tmp_ly = ifstream.readline().split()
+    	tmp_lz = ifstream.readline().split()
     
     	lx = str( float(tmp_lx[1]) - float(tmp_lx[0]) )
     	ly = str( float(tmp_ly[1]) - float(tmp_ly[0]) )
@@ -168,11 +172,11 @@ def lmp_to_xyzf(units, trjfile, logfile): #, argv):
     	print_f = True
     	
     	if (locs[0] == -1):
-    		print "Error: id missing from file"
+    		print("Error: id missing from file")
     		exit()
     	
     	if (locs[1] == -1) or (locs[2] == -1) or (locs[3] == -1):
-    		print "Error: xu, yu, or zu missing from file"
+    		print ("Error: xu, yu, or zu missing from file")
     		exit()
     	
     	if (locs[4] == -1) or (locs[5] == -1) or (locs[6] == -1):  	
@@ -181,11 +185,11 @@ def lmp_to_xyzf(units, trjfile, logfile): #, argv):
     		print_f = False
     		
     		if i == 0:
-    			print "Will not print forces"
+    			print("Will not print forces")
     	
     	# Write the coordinates
     	
-    	for j in range(atoms):
+    	for j in range(natoms):
     	
     		line = ifstream.readline().split()
     		
@@ -194,14 +198,14 @@ def lmp_to_xyzf(units, trjfile, logfile): #, argv):
     			tmp = line[locs[0]] + " " + line[locs[1]] + " " + line[locs[2]] + " " + line[locs[3]]
     
     			if print_f:
-    				tmp += " " + `float(line[locs[4]])*fconv` + " " + `float(line[locs[5]])*fconv` + " " + `float(line[locs[6]])*fconv`
-line
+    				tmp += " " + str(float(line[locs[4]])*fconv) + " " + str(float(line[locs[5]])*fconv) + " " + str(float(line[locs[6]])*fconv)
+
     			ofstream.write(tmp + '\n')
     
     ofstream.close()
-    ifstream .close()
+    ifstream.close()
     		
-    print ("Printed frames:           " + `printed`	)
+    print ("Printed frames:           ",printed)
 
 		
 	

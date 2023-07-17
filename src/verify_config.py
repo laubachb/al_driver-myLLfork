@@ -567,9 +567,9 @@ def check_LMP(user_config):
 
         if ((user_config.BULK_QM_METHOD == "LMP") or (user_config.IGAS_QM_METHOD == "LMP")):
             print("WARNING: Option config.LMP_POSTPRC was not set")
-            print("         Will use config.DRIVER_DIR + \"/src/lmp2xyz.py\"")
+            print("         Will use config.DRIVER_DIR + \"/src/lmp_to_xyz.py\"")
 
-        user_config.LMP_POSTPRC = user_config.DRIVER_DIR + "/src/lmp2xyz.py"            
+        user_config.LMP_POSTPRC = user_config.DRIVER_DIR + "/src/lmp_to_xyz.py"            
     
     if not hasattr(user_config,'LMP_NODES'):
 
@@ -785,7 +785,7 @@ def verify(user_config):
 
         # Determines whether to build on existing parameter files
         
-        print("Warning: Option config.DO_HIERARCH was not set")
+        print("WARNING: Option config.DO_HIERARCH was not set")
         print("         Will use \"False\"")
         
         user_config.DO_HIERARCH = False

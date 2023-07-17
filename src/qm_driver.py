@@ -9,6 +9,7 @@ import vasp_driver
 import gauss_driver
 import cp2k_driver
 import dftbplus_driver
+import lmp_driver
 
 
 def cleanup_and_setup(bulk_qm_method, igas_qm_method, *argv, **kwargs):
@@ -47,6 +48,7 @@ def cleanup_and_setup(bulk_qm_method, igas_qm_method, *argv, **kwargs):
         is_just_bulk = True
 
     if (bulk_qm_method == igas_qm_method) or is_just_bulk: # Then it's all VASP or DFTB, just submit as normal
+
         if bulk_qm_method == "VASP":
             print("WARNING: VASP as a gas phase method is untested!")
             vasp_driver.cleanup_and_setup(*argv, **kwargs)
@@ -266,16 +268,16 @@ def setup_qm(my_ALC, bulk_qm_method, igas_qm_method, *argv, **kwargs):
             
             if not is_just_bulk:
                 print("WARNING: LAMMPS as a gas phase method is untested!")
-                
-            run_qm_jobids += lmp_driver.setup_cp2k(my_ALC, *argv,
+                  
+            run_qm_jobids += lmp_driver.setup_lmp(my_ALC, *argv,
                 first_run      = True,             
                 basefile_dir   = args  ["basefile_dir"],
                 modules        = args  ["LMP_modules"],
-                data_dir       = args  ["LMP_data_dir"],
                 job_email      = args  ["job_email"],
                 job_nodes      = args  ["LMP_nodes"],
                 job_ppn        = args  ["LMP_ppn"],
                 job_mem        = args  ["LMP_mem"],
+                job_executable = args  ["LMP_exe"],                
                 job_walltime   = args  ["LMP_time"],
                 job_queue      = args  ["LMP_queue"],
                 job_account    = args  ["job_account"], 
@@ -454,6 +456,7 @@ def continue_job(bulk_qm_method, igas_qm_method, *argv, **kwargs):
     any_Gaussian = []
     any_DFTB     = []
     any_CP2K     = []
+    any_LMP      = []
     
     # Determine how many types of VASP jobs there are
 
@@ -639,7 +642,7 @@ def post_process(bulk_qm_method, igas_qm_method, *argv, **kwargs):
     # LAMMPS specific controls
     
     default_keys[5 ] = "lmp_postproc"  ; default_values[5 ] = "" # Python file for post-processing LAMMPS output  
-    default_keys[5 ] = "lmp_units   "  ; default_values[5 ] = "REAL" # Units used by the LAMMPS reference method   
+    default_keys[6 ] = "lmp_units"     ; default_values[6 ] = "REAL" # Units used by the LAMMPS reference method   
     
 
     args = dict(list(zip(default_keys, default_values)))

@@ -34,11 +34,13 @@ def main(args):
 
     Notes: 
 
+           - If "unbuffer" command is unavailable on your system, try replacing "unuffer python" with "python -u"
+
            - Run location is specified in the config file (WORKING_DIR), NOT the directory 
              it was launched from
     
-           - This tool works most effectively when run with screen during remote runs
-             (screen allows the session to be detached/reattached)    
+           - This tool works most effectively when run with something like screen, tmux, or nohup 
+             during remote runs (these utils allow the session to be detached/reattached)    
     
            - Build documentation with: ./build_docs.sh 
              ...This will create .html files in the doc directory that can be opened
@@ -84,6 +86,14 @@ def main(args):
            - Add ability to use AL-driver for DFTB model fitting (DFTB+)
            
            - Add ability to subtract off contributions from an external simulation (LAMMPS)
+           
+           - Add support for LAMMPS as a MD method
+           
+           - Refactor supported delta-learning methods; give appropriate name
+           
+           - Refactor supported hierarchical transfer learning; give appropriate name
+           
+           - Add support for multi-resolution/scale model development (Frankenstein A-matrices/dual parameter files)
         
     """           
         
@@ -528,14 +538,14 @@ def main(args):
                         Gaussian_ppn   = config.GAUS_PPN,
                         Gaussian_time  = config.GAUS_TIME,
                         Gaussian_queue = config.GAUS_QUEUE,       
-                        LAMMPS_exe     = config.LMP_EXE,
-                        LAMMPS_units   = config.LMP_UNITS,
-                        LAMMPS_nodes   = config.LMP_NODES,
-                        LAMMPS_ppn     = config.LMP_PPN,
-                        LAMMPS_mem     = config.LMP_MEM,
-                        LAMMPS_time    = config.LMP_TIME,
-                        LAMMPS_queue   = config.LMP_QUEUE,
-                        LAMMPS_modules = config.LMP_MODULES,                      
+                        LMP_exe     = config.LMP_EXE,
+                        LMP_units   = config.LMP_UNITS,
+                        LMP_nodes   = config.LMP_NODES,
+                        LMP_ppn     = config.LMP_PPN,
+                        LMP_mem     = config.LMP_MEM,
+                        LMP_time    = config.LMP_TIME,
+                        LMP_queue   = config.LMP_QUEUE,
+                        LMP_modules = config.LMP_MODULES,                      
                         job_ppn        = config.HPC_PPN,
                         job_account    = config.HPC_ACCOUNT,
                         job_system     = config.HPC_SYSTEM,
@@ -1019,7 +1029,7 @@ def main(args):
                 restart_controller.update_file("CLEANSETUP_QM: COMPLETE" + '\n')    
             else:
                 restart_controller.update_file("CLEANSETUP_QM: COMPLETE" + '\n')
-                            
+                           
             if not restart_controller.INIT_QMJOB:    
             
                 active_jobs = []
@@ -1063,14 +1073,14 @@ def main(args):
                         CP2K_queue     = config.CP2K_QUEUE,
                         CP2K_modules   = config.CP2K_MODULES,
                         CP2K_data_dir  = config.CP2K_DATADIR,  
-                        LAMMPS_exe     = config.LMP_EXE,
-                        LAMMPS_units   = config.LMP_UNITS,
-                        LAMMPS_nodes   = config.LMP_NODES,
-                        LAMMPS_ppn     = config.LMP_PPN,
-                        LAMMPS_mem     = config.LMP_MEM,
-                        LAMMPS_time    = config.LMP_TIME,
-                        LAMMPS_queue   = config.LMP_QUEUE,
-                        LAMMPS_modules = config.LMP_MODULES,                                                                       
+                        LMP_exe     = config.LMP_EXE,
+                        LMP_units   = config.LMP_UNITS,
+                        LMP_nodes   = config.LMP_NODES,
+                        LMP_ppn     = config.LMP_PPN,
+                        LMP_mem     = config.LMP_MEM,
+                        LMP_time    = config.LMP_TIME,
+                        LMP_queue   = config.LMP_QUEUE,
+                        LMP_modules = config.LMP_MODULES,                                                                       
                         Gaussian_exe   = config.GAUS_EXE,
                         Gaussian_scr   = config.GAUS_SCR,
                         Gaussian_nodes = config.GAUS_NODES,

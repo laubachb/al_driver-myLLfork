@@ -6,9 +6,10 @@
 
 ATOM_TYPES     = ["C"]
 NO_CASES       = 1
+USE_AL_STRS    = -1 # Do not fit stresses
 
 DRIVER_DIR     = "/home/rklinds/codes/al_driver-myLLfork"
-WORKING_DIR    = DRIVER_DIR + "examples/simple_iter_single_statepoint-lmp/my_test/"
+WORKING_DIR    = DRIVER_DIR + "/examples/simple_iter_single_statepoint-lmp/my_test/"
 CHIMES_SRCDIR  = "/home/rklinds/codes/chimes_lsq-myLLfork/src/"
 
 ################################
@@ -26,13 +27,13 @@ ALC0_FILES    = WORKING_DIR + "ALL_BASE_FILES/ALC-0_BASEFILES/"
 CHIMES_LSQ    = CHIMES_SRCDIR + "../build/chimes_lsq"
 CHIMES_SOLVER = CHIMES_SRCDIR + "../build/chimes_lsq.py"
 CHIMES_POSTPRC= CHIMES_SRCDIR + "../build/post_proc_chimes_lsq.py"
-CHIMES_MODULES= "intel/2022.1.2 impi/2021.5.1 mkl/2022.0.2 "
+CHIMES_MODULES= "intel/2022.1.2 impi/2021.5.1 mkl/2022.0.2 python3.9-anaconda/2021.11"
 
 # Generic weight settings
 
 WEIGHTS_FORCE =   1.0
 
-REGRESS_ALG   = "svd"
+REGRESS_ALG   = "dlasso"
 REGRESS_VAR   = "1.0E-5"
 REGRESS_NRM   = True
 
@@ -54,6 +55,7 @@ CHIMES_LSQ_MODULES = CHIMES_MODULES
 MD_STYLE          = "CHIMES"
 MD_QUEUE          = ["standard"]*NO_CASES
 MD_TIME           = ["00:03:00"]*NO_CASES
+MD_NODES          = ["1"]      * NO_CASES
 CHIMES_MD_MPI     = CHIMES_SRCDIR + "../build/chimes_md"
 CHIMES_MD_MODULES = CHIMES_MODULES
 

@@ -6,7 +6,7 @@ import os
 # Localmodules
 
 import helpers
-import cp2k_to_xyz
+import lmp_to_xyz
 
 def cleanup_and_setup(*argv, **kwargs):
     
@@ -218,7 +218,7 @@ def generate_datafile(inxyz, basedir, smearing):
     # Note: Smearing is borrowed from QM methods. Not a smearing parameter but does tell us which template files to grab
 
     xyzstream      = open(inxyz,'r')
-    tmpstream      = open(basedir + smearing + ".data.in", 'r')
+    tmpstream      = open(basedir + "/" + str(smearing) + ".data.in", 'r')
     lmpstream      = open(inxyz + ".data.in", 'w')
     natoms         = int(xyzstream.readline())
     
@@ -337,13 +337,20 @@ def post_process(*argv, **kwargs):
                 print("ERROR: In lmp_driver.post_process on case",j)
                 print("       Number of .log.lammps files and *\#*.traj.lammpstrj files do not match")
                 print("       Something went wrong with LAMMPS calculations...")
+                print("       Log files: ",len(log_list))
+                for f in range(len(log_list)):
+                    print("\t\t\t" + log_list[i])
+                print("       Traj files: ",len(trj_list))
+                for f in range(len(trj_list)):
+                    print("\t\t\t" + trj_list[i])
+                
                 exit()
                 
         for j in range(len(log_list)):
 
             lmp_to_xyz.lmp_to_xyzf( args["units"], trj_list[j], log_list[j])
 
-            outfile = crd_list[j]+ "xyzf"
+            outfile = trj_list[j] + ".xyzf"
             
             if os.path.isfile(outfile):
             
@@ -510,6 +517,9 @@ def setup_lmp(my_ALC, *argv, **kwargs):
 
                 generate_datafile(j, args["basefile_dir"], temp) 
                 
+                helpers.run_bash_cmnd("cp " + args["basefile_dir"] + "/" + str(temp) + ".in.lammps in.lammps")
+                
+                
         else:
 
             print("ERROR: LAMMPS reference method incompatible with ChIMES cluster-entropy based active learning")
@@ -524,37 +534,20 @@ def setup_lmp(my_ALC, *argv, **kwargs):
         helpers.run_bash_cmnd("cp " + ' '.join(glob.glob(args["basefile_dir"] + "/*")) + " .")
         
         ###
-        ### Delete any not for this case (temperature)
+        ### Delete any not for this case  -- take care of this later
         ###
-        
-        # Get a list of all cp2k.input files (differ by set temperature)
-        
-        lmpins = sorted(glob.glob("*.in.lammps")) 
-        
-        # Determine the simulation tempertaure for this case
-
-        tag = glob.glob("*#*xyz") # This block determines how many .xyz files there are for padding purposes
-        tag = len(str(len(tag)))
-        tag = "".zfill(tag+1)
-
-        temp = str(int(float(helpers.head(glob.glob("*" + tag + "*xyz.xyz" )[0],2)[-1].split()[-2])))
-        
-        # Remove this case's temperature incar from the list of incars to delete
-        
-        lmpins.remove(temp + ".in.lammps")
-        helpers.run_bash_cmnd("rm -f " + ' '.join(lmpins))
         
         ###
         ### Create the task string
         ###
-                
+    
         job_task = []
         job_task.append("module load " + args["modules"] + '\n')
 
-        job_task.append("for j in $(ls *\#*xyz.xyz)         ")
+        job_task.append("for j in $(ls *\#*xyz.data.in)         ")
         job_task.append("do                             ")
-        job_task.append("    TAG=${j%*.xyz}             ")      
-        job_task.append("    cp ${TAG}.data.in data.in  ")
+        job_task.append("    TAG=${j%*.xyz.data.in}     ")      
+        job_task.append("    cp " + str(temp) + ".data.in data.in  ")
         job_task.append("    CHECK=${TAG}.out.lammps    ")
         job_task.append("    if [ -e ${CHECK} ] ; then  ")  
         job_task.append("        continue               ")
@@ -568,7 +561,8 @@ def setup_lmp(my_ALC, *argv, **kwargs):
         job_task.append("    fi                                 ")
         job_task.append("    echo \"Attempt\" >> ${TAG}.tries")
         job_task.append("    srun -N " + repr(args["job_nodes" ]) + " -n " + repr(int(args["job_nodes"])*int(args["job_ppn"])) + " " + args["job_executable"] + " -i in.lammps > ${TAG}.out.lammps")
-        job_task.append("    mv log.lammps  ${TAG}log.lammps ")   
+        job_task.append("    mv log.lammps  ${TAG}.log.lammps ") 
+        job_task.append("    mv traj.lammpstrj  ${TAG}.traj.lammpstrj ")   
         job_task.append("done")
         
         this_jobid = helpers.create_and_launch_job(job_task,
@@ -581,10 +575,10 @@ def setup_lmp(my_ALC, *argv, **kwargs):
             job_account    =     args["job_account" ] ,
             job_system     =     args["job_system"  ] ,
             job_mem        =     args["job_mem"     ] ,
-            job_file       =     "run_cp2k.cmd")
+            job_file       =     "run_lmp.cmd")
             
         run_lmp_jobid.append(this_jobid.split()[0])    
-    
+
         os.chdir(curr_dir)
     
     return run_lmp_jobid        
