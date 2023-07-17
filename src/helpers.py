@@ -24,6 +24,7 @@ def findinfile(search_str,search_file):
     
     return matches
     
+
 def getlineno(search_str,search_file):
         
     matches = []
@@ -36,6 +37,7 @@ def getlineno(search_str,search_file):
             index += 1
     
     return matches  
+  
 
 def readlines(infile,start_line=0, nlines=-1):
 

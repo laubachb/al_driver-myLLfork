@@ -79,6 +79,7 @@ def cleanup_and_setup(bulk_qm_method, igas_qm_method, *argv, **kwargs):
                     cp2k_driver.cleanup_and_setup(*tmp_args, build_dir = args["build_dir"])     
                 elif bulk_qm_method == "LMP":
                     lmp_driver.cleanup_and_setup(*tmp_args, build_dir = args["build_dir"])                                      
+
                 else:
                     print("ERROR: Unknown bulk_qm_method in qm_driver.cleanup_and_setup:", bulk_qm_method)
             else:
@@ -193,6 +194,7 @@ def setup_qm(my_ALC, bulk_qm_method, igas_qm_method, *argv, **kwargs):
     default_keys[42] = "job_account"  ; default_values[42] = "pbronze"         # Account for ChIMES md job
     default_keys[43] = "job_system"   ; default_values[43] = "slurm"           # slurm or torque       
     default_keys[44] = "job_email"    ; default_values[44] = True              # Send slurm emails?
+
     
     args = dict(list(zip(default_keys, default_values)))
     args.update(kwargs)    
@@ -282,6 +284,7 @@ def setup_qm(my_ALC, bulk_qm_method, igas_qm_method, *argv, **kwargs):
                 job_queue      = args  ["LMP_queue"],
                 job_account    = args  ["job_account"], 
                 job_system     = args  ["job_system"])                             
+
                 
         else:
             print("ERROR: Unknown bulk/igas_qm_method in qm_driver.setup_qm:", bulk_qm_method)
@@ -327,6 +330,7 @@ def setup_qm(my_ALC, bulk_qm_method, igas_qm_method, *argv, **kwargs):
                           
                 elif bulk_qm_method == "CP2K":
                     run_qm_jobids += cp2k_driver.setup_cp2k(my_ALC, *argv,
+
                         first_run      = True,             
                         basefile_dir   = args  ["basefile_dir"],
                         modules        = args  ["CP2K_modules"],
@@ -344,6 +348,7 @@ def setup_qm(my_ALC, bulk_qm_method, igas_qm_method, *argv, **kwargs):
                 elif bulk_qm_method == "LMP": # Need to quit with error b/c this implies we'll try to run cluster ("all") with lmp too
                     print("ERROR: LAMMPS cannot be used as a reference method with ChIMES cluster entropy-based active learning") 
                     exit()                       
+
                 else:
                     print("ERROR: Unknown bulk_qm_method in qm_driver.setup_qm:", bulk_qm_method)
             else:
@@ -386,8 +391,9 @@ def setup_qm(my_ALC, bulk_qm_method, igas_qm_method, *argv, **kwargs):
                         
                 elif igas_qm_method == "CP2K":
                     print("WARNING: CP2K as a gas phase method is untested!")
-                
+            
                     run_qm_jobids += cp2k_driver.setup_cp2k(my_ALC, *argv,
+
                         first_run      = True,             
                         basefile_dir   = args  ["basefile_dir"],
                         modules        = args  ["CP2K_modules"],
@@ -457,6 +463,7 @@ def continue_job(bulk_qm_method, igas_qm_method, *argv, **kwargs):
     any_DFTB     = []
     any_CP2K     = []
     any_LMP      = []
+
     
     # Determine how many types of VASP jobs there are
 
@@ -573,6 +580,7 @@ def check_convergence(my_ALC, bulk_qm_method, igas_qm_method, *argv, **kwargs):
             total_failed += cp2k_driver.check_convergence(my_ALC, *argv, **kwargs) 
         elif bulk_qm_method == "LMP":
             total_failed += lmp_driver.check_convergence(my_ALC, *argv, **kwargs)                        
+
         else:
             print("ERROR: Unknown bulk/igas_qm_method in qm_driver.check_convergence:", bulk_qm_method)            
             
@@ -617,10 +625,9 @@ def post_process(bulk_qm_method, igas_qm_method, *argv, **kwargs):
     Notes: See function definition in qm_driver.py for a full list of options. 
                
     """    
-    
+
     default_keys   = [""]*7
     default_values = [""]*7
-
 
     # VASP specific controls
     
@@ -643,6 +650,7 @@ def post_process(bulk_qm_method, igas_qm_method, *argv, **kwargs):
     
     default_keys[5 ] = "lmp_postproc"  ; default_values[5 ] = "" # Python file for post-processing LAMMPS output  
     default_keys[6 ] = "lmp_units"     ; default_values[6 ] = "REAL" # Units used by the LAMMPS reference method   
+
     
 
     args = dict(list(zip(default_keys, default_values)))
@@ -666,6 +674,7 @@ def post_process(bulk_qm_method, igas_qm_method, *argv, **kwargs):
             print("ERROR: Unknown bulk/igas_qm_method in qm_driver.post_process:", bulk_qm_method)
             exit()
 
+
     else: # Need to submit each differently 
         for i in argv[0]:
         
@@ -682,6 +691,7 @@ def post_process(bulk_qm_method, igas_qm_method, *argv, **kwargs):
                 elif bulk_qm_method == "LMP":
                     print("ERROR: LAMMPS cannot be used as a reference method with ChIMES cluster entropy-based active learning") 
                     exit()                                                         
+
                 else:
                     print("ERROR: Unknown bulk_qm_method in qm_driver.post_process:", bulk_qm_method)
                     exit()

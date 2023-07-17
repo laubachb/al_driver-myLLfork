@@ -155,7 +155,7 @@ def main(args):
         config.CP2K_POSTPRC   = config.HPC_PYTHON + " " + config.CP2K_POSTPRC     
     if ((config.BULK_QM_METHOD == "LMP") or (config.IGAS_QM_METHOD == "LMP")):
         config.LMP_POSTPRC   = config.HPC_PYTHON + " " + config.LMP_POSTPRC        
-            
+
     
     if config.EMAIL_ADD:
         EMAIL_ADD = config.EMAIL_ADD    
@@ -538,14 +538,14 @@ def main(args):
                         Gaussian_ppn   = config.GAUS_PPN,
                         Gaussian_time  = config.GAUS_TIME,
                         Gaussian_queue = config.GAUS_QUEUE,       
-                        LMP_exe     = config.LMP_EXE,
-                        LMP_units   = config.LMP_UNITS,
-                        LMP_nodes   = config.LMP_NODES,
-                        LMP_ppn     = config.LMP_PPN,
-                        LMP_mem     = config.LMP_MEM,
-                        LMP_time    = config.LMP_TIME,
-                        LMP_queue   = config.LMP_QUEUE,
-                        LMP_modules = config.LMP_MODULES,                      
+                        LMP_exe        = config.LMP_EXE,
+                        LMP_units      = config.LMP_UNITS,
+                        LMP_nodes      = config.LMP_NODES,
+                        LMP_ppn        = config.LMP_PPN,
+                        LMP_mem        = config.LMP_MEM,
+                        LMP_time       = config.LMP_TIME,
+                        LMP_queue      = config.LMP_QUEUE,
+                        LMP_modules    = config.LMP_MODULES,                      
                         job_ppn        = config.HPC_PPN,
                         job_account    = config.HPC_ACCOUNT,
                         job_system     = config.HPC_SYSTEM,
@@ -689,7 +689,6 @@ def main(args):
                     qm_20F_path = config.WORKING_DIR + "/ALC-" + repr(THIS_ALC-1) + "/CP2K-20/"   
                 elif config.BULK_QM_METHOD == "LMP":
                     qm_20F_path = config.WORKING_DIR + "/ALC-" + repr(THIS_ALC-1) + "/LMP-20/"          
-                           
                 else:
                     print("Error in main driver while building Amat: unkown BULK QM method:", config.BULK_QM_METHOD)
                     exit()

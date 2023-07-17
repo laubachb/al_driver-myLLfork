@@ -430,7 +430,7 @@ def check_CP2K(user_config):
             exit()
         else:
             user_config.CP2K_EXE = None    
-    
+
 def check_GAUS(user_config):
     
     """
