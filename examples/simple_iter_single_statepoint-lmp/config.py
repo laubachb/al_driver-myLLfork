@@ -9,7 +9,7 @@ NO_CASES       = 1
 USE_AL_STRS    = -1 # Do not fit stresses
 
 DRIVER_DIR     = "/home/rklinds/codes/al_driver-myLLfork"
-WORKING_DIR    = DRIVER_DIR + "/examples/simple_iter_single_statepoint-lmp/my_test/"
+WORKING_DIR    = DRIVER_DIR + "/examples/simple_iter_single_statepoint-lmp/my_test-3.0/"
 CHIMES_SRCDIR  = "/home/rklinds/codes/chimes_lsq-myLLfork/src/"
 
 ################################
@@ -31,7 +31,7 @@ CHIMES_MODULES= "intel/2022.1.2 impi/2021.5.1 mkl/2022.0.2 python3.9-anaconda/20
 
 # Generic weight settings
 
-WEIGHTS_FORCE =   1.0
+WEIGHTS_FORCE =   [["A","B"],[[1.0],[1.0,-1.0]]]
 
 REGRESS_ALG   = "dlasso"
 REGRESS_VAR   = "1.0E-5"
@@ -70,7 +70,7 @@ BULK_QM_METHOD = "LMP"
 IGAS_QM_METHOD = "LMP" # Must be defined, even if unused
 
 QM_FILES     = WORKING_DIR + "ALL_BASE_FILES/LMP_BASEFILES"
-LMP_EXE      = "/home/rklinds/codes/chimes_calculator-myLLfork/etc/lmp/exe/lmp_mpi_chimes"
+LMP_EXE      = "/home/rklinds/codes/chimes_calculator-myLLfork/etc/lmp/build/lammps_stable_29Oct2020/src/lmp_mpi_chimes"
 LMP_UNITS    = "REAL"
 LMP_TIME     = "00:10:00"
 LMP_NODES    = 1
