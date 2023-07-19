@@ -13,12 +13,12 @@ def post_proc(my_ALC, my_case, my_indep, style, *argv, **kwargs):
 
     """ 
     
-    Post-processes a ChIMES MD run
+    Post-processes a ChIMES-model MD run
     
     Usage: run_md(1, 0, 0, <arguments>)
     
     Notes: See function definition in *_run_md.py for a full list of options. 
-           Requrires config.CHIMES_MOLANAL (should contain molanal.new and findmolecules.pl)
+           Requrires, e.g.,  config.CHIMES_MOLANAL (should contain molanal.new and findmolecules.pl)
            Expects to be called from ALC-my_ALC's base folder.
            Assumes job is being launched from ALC-X.
            Supports ~parallel learning~ via file structure:
@@ -36,6 +36,8 @@ def post_proc(my_ALC, my_case, my_indep, style, *argv, **kwargs):
         chimes_run_md.post_proc(my_ALC, my_case, my_indep, *argv, **kwargs)
     elif style == "DFTB":
         dftbplus_run_md.post_proc(my_ALC, my_case, my_indep, *argv, **kwargs)
+    elif style == "LMP":
+        lmp_run_md.post_proc(my_ALC, my_case, my_indep, *argv, **kwargs)        
     else:
         print("ERROR: Unknown post_proc style in run_md.py: ", style)
     
@@ -46,13 +48,13 @@ def run_md(my_ALC, my_case, my_indep, style, *argv, **kwargs):
 
     """ 
     
-    Launches a ChIMES md simulation
+    Launches a ChIMES-model md simulation
     
     Usage: run_md(1, 0, 0, <arguments>)
     
     Notes: See function definition in *_run_md.py for a full list of options. 
-           Requrires config.CHIMES_MD.
-           Requrires config.CHIMES_MOLANAL (should contain molanal.new and findmolecules.pl)
+           Requrires, e.g.,  config.CHIMES_MD.
+           Requrires, e.g.,  config.CHIMES_MOLANAL (should contain molanal.new and findmolecules.pl)
            Expects to be called from ALC-my_ALC's base folder.
            Assumes job is being launched from ALC-X.
            Supports ~parallel learning~ via file structure:
@@ -69,6 +71,8 @@ def run_md(my_ALC, my_case, my_indep, style, *argv, **kwargs):
         md_jobid = chimes_run_md.run_md(my_ALC, my_case, my_indep, *argv, **kwargs)
     elif style == "DFTB":
         md_jobid = dftbplus_run_md.run_md(my_ALC, my_case, my_indep, *argv, **kwargs)
+    elif style == "LMP":
+        md_jobid = lmp_run_md.run_md(my_ALC, my_case, my_indep, *argv, **kwargs)        
     else:
         print("ERROR: Unknown post_proc style in run_md.py: ", style)
     
