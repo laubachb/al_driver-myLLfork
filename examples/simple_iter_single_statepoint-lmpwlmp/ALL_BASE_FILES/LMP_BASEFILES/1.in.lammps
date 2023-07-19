@@ -17,10 +17,12 @@ pair_coeff   1 1 0.2 3.75
 #### Specify bonded model/parameters
 
 bond_style      harmonic          # morse
-bond_coeff      1 350.0 1.54
+bond_coeff      1 2000.0 1.54
 
-angle_style     harmonic
-angle_coeff     1 75.0 120.0
+angle_style     class2
+angle_coeff     1 112.0 1000.0 0.0 0.0 
+angle_coeff     1 bb 100.0 1.54 1.54
+angle_coeff     1 ba 1000.0 1000.0 1.54 1.54
 
 dihedral_style  none
 improper_style  none

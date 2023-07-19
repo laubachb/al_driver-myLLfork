@@ -9,7 +9,7 @@ NO_CASES       = 1
 USE_AL_STRS    = -1 # Do not fit stresses
 
 DRIVER_DIR     = "/home/rklinds/codes/al_driver-myLLfork"
-WORKING_DIR    = DRIVER_DIR + "/examples/simple_iter_single_statepoint-lmp/my_test-3.0/"
+WORKING_DIR    = DRIVER_DIR + "/examples/simple_iter_single_statepoint-lmp/"
 CHIMES_SRCDIR  = "/home/rklinds/codes/chimes_lsq-myLLfork/src/"
 
 ################################

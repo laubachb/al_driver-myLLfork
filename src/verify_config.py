@@ -58,7 +58,7 @@ def print_help():
     PARAM.append("CHIMES_SOLVE_TIME");              VARTYP.append("str");           DETAILS.append("Walltime for lsq2.py/DLARS (lassolars) job (e.g. \"04:00:00\")")
     PARAM.append("MD_STYLE");                       VARTYP.append("str");           DETAILS.append("Should MD simulations be run as ChIMES-only (\"CHIMES\") or DFTB+ChIMES (\"DFTB\")?")    
     PARAM.append("MOLANAL");                        VARTYP.append("str");           DETAILS.append("Absolute path to the molanal src directory")
-    PARAM.append("MDFILES");                        VARTYP.append("str");           DETAILS.append("Absolute path to MD input files like case-0.indep-0.run_md.in (e.g. WORKING_DIR + \"ALL_BASE_FILES/CHIMESMD_FILES\")")
+    PARAM.append("MD_FILES");                        VARTYP.append("str");           DETAILS.append("Absolute path to MD input files like case-0.indep-0.run_md.in (e.g. WORKING_DIR + \"ALL_BASE_FILES/CHIMESMD_FILES\")")
     PARAM.append("MD_NODES");                       VARTYP.append("int");           DETAILS.append("Number of nodes to use when running md simulations")
     PARAM.append("MD_QUEUE");                       VARTYP.append("str");           DETAILS.append("Queue to submit md simulations to to")
     PARAM.append("MD_TIME");                        VARTYP.append("str");           DETAILS.append("Walltime for md simulations (e.g. \"04:00:00\")")
@@ -546,10 +546,16 @@ def check_LMP(user_config):
         # Location of basic LAMMPS+ input files (data.header.in, data.footer.in, in.lammps)
 
         if ((user_config.BULK_QM_METHOD == "LMP") or (user_config.IGAS_QM_METHOD == "LMP")):
-            print("WARNING: Option config.LMP_FILES was not set")
-            print("         Will use config.WORKING_DIR + \"ALL_BASE_FILES/QM_BASEFILES\"")
+        
+            if hasattr(user_config,'QM_FILES'):
+            
+                user_config.LMP_FILES = user_config.QM_FILES
+            else:
+        
+                print("WARNING: Option config.LMP_FILES was not set")
+                print("         Will use config.WORKING_DIR + \"ALL_BASE_FILES/QM_BASEFILES\"")
 
-        user_config.LMP_FILES = user_config.WORKING_DIR + "ALL_BASE_FILES/QM_BASEFILES"
+                user_config.LMP_FILES = user_config.WORKING_DIR + "ALL_BASE_FILES/QM_BASEFILES"
 
     if not hasattr(user_config,'LMP_UNITS'):
 
@@ -1224,40 +1230,57 @@ def verify(user_config):
 
         print("WARNING: Defunct option config.CHIMES_MD was set")
         print("         Ignoring. Will search for config.CHIMES_MD_SER and config.CHIMES_MD_MPI")
-        
-    if not hasattr(user_config,'CHIMES_MD_SER'):
 
-        # Path to the serial chimes_md executable
-
-        print("WARNING: Option config.CHIMES_MD_SER was not set")
-        print("         Will use config.CHIMES_SRCDIR + \"chimes_md-serial\"")
-        
-        user_config.CHIMES_MD_SER = user_config.CHIMES_SRCDIR + "chimes_md-serial"        
+    if not hasattr(user_config,'MD_SER'):
     
-    if user_config.MD_STYLE == "CHIMES":
+        if user_config.MD_STYLE == "CHIMES":
+
+            # Path to the serial chimes_md executable
+
+            print("WARNING: Option config.MD_SER was not set")
+            print("         Will use config.CHIMES_SRCDIR + \"chimes_md-serial\"")
         
-        if not hasattr(user_config,'CHIMES_MD_MPI'):
+            user_config.MD_SER = user_config.CHIMES_SRCDIR + "chimes_md-serial"        
+
+        elif user_config.MD_STYLE == "DFTB":
+
+            # Path to chimes_md executable
+
+            print("ERROR: Option config.MD_SER was not set")
+            print("       Must be set as path to serial DFTBplus executable")
+            exit()
+
+        elif user_config.MD_STYLE == "LMP":
+
+            # Path to chimes_md executable
+
+            print("WARNING: Option config.MD_SER was not set")
+            print("         Will use None")
+
+            user_config.MD_SER = None
+
+    if not hasattr(user_config,'MD_MPI'):
+
+        if user_config.MD_STYLE == "CHIMES":
 
             # Path to chimes_md executable
 
             print("WARNING: Option config.CHIMES_MD_MPI was not set")
             print("         Will use config.CHIMES_SRCDIR + \"chimes_md-mpi\"")
         
-            user_config.CHIMES_MD_MPI = user_config.CHIMES_SRCDIR + "chimes_md-mpi"
+            user_config.MD_MPI = user_config.CHIMES_SRCDIR + "chimes_md-mpi"
 
-    elif user_config.MD_STYLE == "DFTB":
+        elif user_config.MD_STYLE == "DFTB":
     
-        if not hasattr(user_config,'DFTB_MD_SER'):
+            user_config.MD_MPI = user_config.MD_SER    
 
-            # Path to chimes_md executable
-
-            print("ERROR: Option config.DFTB_MD_SER was not set")
-            print("       Must be set as path to serial DFTBplus executable")
-            
+        elif user_config.MD_STYLE == "LMP":
+    
+            print("ERROR: Option config.MD_MPI was not set")
+            print("       Must be set as path to serial LAMMPS executable")
             exit()
-        else:
-        
-            user_config.CHIMES_MD_MPI = user_config.DFTB_MD_SER    
+
+
         
     if not hasattr(user_config,'MOLANAL'):
 
@@ -1269,13 +1292,17 @@ def verify(user_config):
         exit()
         
     if not hasattr(user_config,'MDFILES'):
+    
+        if hasattr(user_config,'MD_FILES'): # Add for backwards compatability 
+            user_config.MDFILES = user_config.MD_FILES
+        else:
 
-        # Path to the base chimes_md files (i.e. input.xyz's and run_md.in's)
+            # Path to the base chimes_md files (i.e. input.xyz's and run_md.in's)
 
-        print("WARNING: Option config.MDFILES was not set")
-        print("         Will use config.WORKING_DIR + \"ALL_BASE_FILES/CHIMESMD_BASEFILES/\"")
+            print("WARNING: Option config.MDFILES was not set")
+            print("         Will use config.WORKING_DIR + \"ALL_BASE_FILES/CHIMESMD_BASEFILES/\"")
         
-        user_config.MDFILES = user_config.WORKING_DIR + "ALL_BASE_FILES/CHIMESMD_BASEFILES/"
+            user_config.MDFILES = user_config.WORKING_DIR + "ALL_BASE_FILES/CHIMESMD_BASEFILES/"
 
     if not hasattr(user_config,'CHIMES_PEN_PREFAC'):
 

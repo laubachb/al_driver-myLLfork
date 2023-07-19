@@ -96,6 +96,20 @@ def main(args):
     if config.EMAIL_ADD:
         EMAIL_ADD = config.EMAIL_ADD    
         
+    if config.CHIMES_MDFILES:
+        config.MD_FILES = config.CHIMES_MDFILES
+        
+    # Needed for backward compatibility
+    
+    if hasattr(config, "CHIMES_MD_MPI") and not hasattr(config,"MD_MPI"):
+        config.MD_MPI = config.CHIMES_MD_MPI
+    
+    if hasattr(config, "CHIMES_MD_SER") and not hasattr(config,"MD_SER"):
+        config.MD_SER = config.CHIMES_MD_SER 
+        
+    if hasattr(config, "CHIMES_MD_MODULES") and not hasattr(config,"MD_MODULES"):
+        config.MD_MODULES = config.CHIMES_MD_MODULES        
+        
         
     ################################
     ################################
@@ -113,18 +127,18 @@ def main(args):
 
 
             active_job = run_md.run_md(THIS_ALC, THIS_CASE, THIS_INDEP,
-                basefile_dir   = config.CHIMES_MDFILES, 
+                basefile_dir   = config.MDFILES, 
                 driver_dir     = config.DRIVER_DIR,
                 penalty_pref   = 1.0E6,        
                 penalty_dist   = 0.02,         
                 job_name       = "ALC-"+ str(THIS_ALC) +"-md-c" + str(THIS_CASE) +"-i" + str(THIS_INDEP),
                 job_email      = config.HPC_EMAIL,            
                 job_ppn        = config.HPC_PPN,            
-                job_nodes      = config.CHIMES_MD_NODES,
-                job_walltime   = config.CHIMES_MD_TIME,      
-                job_queue      = config.CHIMES_MD_QUEUE,      
+                job_nodes      = config.MD_NODES,
+                job_walltime   = config.MD_TIME,      
+                job_queue      = config.MD_QUEUE,      
                 job_account    = config.HPC_ACCOUNT, 
-                job_executable = config.CHIMES_MD_MPI,     
+                job_executable = config.MD_MPI,     
                 job_system     = "slurm",       
                 job_file       = "run.cmd")
         

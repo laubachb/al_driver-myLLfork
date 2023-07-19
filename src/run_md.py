@@ -7,6 +7,7 @@ import os
 
 import chimes_run_md
 import dftbplus_run_md
+import lmp_run_md
 
 
 def post_proc(my_ALC, my_case, my_indep, style, *argv, **kwargs):
@@ -53,7 +54,7 @@ def run_md(my_ALC, my_case, my_indep, style, *argv, **kwargs):
     Usage: run_md(1, 0, 0, <arguments>)
     
     Notes: See function definition in *_run_md.py for a full list of options. 
-           Requrires, e.g.,  config.CHIMES_MD.
+           Requrires, e.g.,  config.MD_STYLE.
            Requrires, e.g.,  config.CHIMES_MOLANAL (should contain molanal.new and findmolecules.pl)
            Expects to be called from ALC-my_ALC's base folder.
            Assumes job is being launched from ALC-X.
@@ -64,6 +65,10 @@ def run_md(my_ALC, my_case, my_indep, style, *argv, **kwargs):
            Returns a job_id for the submitted job.
                
     """
+    
+    print("FYI-1:")
+    print(argv)
+    print(kwargs)
     
     md_jobid = None
     

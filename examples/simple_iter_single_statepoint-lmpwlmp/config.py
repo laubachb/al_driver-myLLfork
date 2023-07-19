@@ -9,7 +9,7 @@ NO_CASES       = 1
 USE_AL_STRS    = -1 # Do not fit stresses
 
 DRIVER_DIR     = "/home/rklinds/codes/al_driver-myLLfork"
-WORKING_DIR    = DRIVER_DIR + "/examples/simple_iter_single_statepoint-lmp/my_test/"
+WORKING_DIR    = DRIVER_DIR + "/examples/simple_iter_single_statepoint-lmpwlmp/"
 CHIMES_SRCDIR  = "/home/rklinds/codes/chimes_lsq-myLLfork/src/"
 
 ################################
@@ -31,7 +31,7 @@ CHIMES_MODULES= "intel/2022.1.2 impi/2021.5.1 mkl/2022.0.2 python3.9-anaconda/20
 
 # Generic weight settings
 
-WEIGHTS_FORCE =   1.0
+WEIGHTS_FORCE =   [["A","B"],[[1.0],[1.0,-1.0]]] 
 
 REGRESS_ALG   = "dlasso"
 REGRESS_VAR   = "1.0E-5"
@@ -52,15 +52,16 @@ CHIMES_LSQ_MODULES = CHIMES_MODULES
 ##### Molecular Dynamics
 ################################
 
-MD_STYLE          = "CHIMES"
+MD_STYLE          = "LMP"
 MD_QUEUE          = ["standard"]*NO_CASES
 MD_TIME           = ["00:03:00"]*NO_CASES
 MD_NODES          = ["1"]      * NO_CASES
-CHIMES_MD_MPI     = CHIMES_SRCDIR + "../build/chimes_md"
-CHIMES_MD_MODULES = CHIMES_MODULES
-
-MOLANAL         = CHIMES_SRCDIR + "../contrib/molanal/src/"
-MOLANAL_SPECIES = ["O1","Si1"]
+MD_FILES          = WORKING_DIR + "/ALL_BASE_FILES/LMPMP_BASEFILES/"
+MD_MPI            = "/home/rklinds/codes/chimes_calculator-myLLfork/etc/lmp/exe/lmp_mpi_chimes"
+MD_SER            = None # Part of ChIMES cluster entropy active learning - not used with LAMMPS as a driver or reference method
+MD_MODULES        = "cmake/3.22.2  intel/18.0.5 impi/2018.4.274"
+MOLANAL           = CHIMES_SRCDIR + "../contrib/molanal/src/"
+MOLANAL_SPECIES   = ["C"]
 
 ################################
 ##### Single-Point QM (or other reference method)
@@ -68,9 +69,9 @@ MOLANAL_SPECIES = ["O1","Si1"]
 
 BULK_QM_METHOD = "LMP"
 IGAS_QM_METHOD = "LMP" # Must be defined, even if unused
+QM_FILES       = WORKING_DIR + "ALL_BASE_FILES/LMP_BASEFILES"
 
-QM_FILES     = WORKING_DIR + "ALL_BASE_FILES/LMP_BASEFILES"
-LMP_EXE      = "/home/rklinds/codes/chimes_calculator-myLLfork/etc/lmp/exe/lmp_mpi_chimes"
+LMP_EXE      = "/home/rklinds/codes/chimes_calculator-myLLfork/etc/lmp/build/lammps_stable_29Oct2020/src/lmp_mpi_chimes" # Has class2 compiled in it
 LMP_UNITS    = "REAL"
 LMP_TIME     = "00:10:00"
 LMP_NODES    = 1

@@ -8,6 +8,7 @@ import random # Needed to set seed for each MD run
 
 import helpers
 import lmp_to_xyz
+import cluster
 
 def post_proc(my_ALC, my_case, my_indep, *argv, **kwargs):
 
@@ -71,9 +72,13 @@ def post_proc(my_ALC, my_case, my_indep, *argv, **kwargs):
     
     # Convert the resulting trajectory file to .gen file named traj.gen
     
-    lmp_to_xyz.lmp_to_xyzf("REAL", traj.lammpstrj, log.lammps) # Creates a file called traj.lammptrj.xyzf
-    helpers.xyz_to_dftbgen("traj.lammptrj.xyzf") # Creates a file named traj.lammpstrj.gen
-    helpers.run_bash_cmnd("mv traj.lammptrj.gen traj.gen")
+    print(helpers.run_bash_cmnd("pwd"))
+    print(my_md_path)
+    print(helpers.run_bash_cmnd("ls"))
+    
+    lmp_to_xyz.lmp_to_xyzf("REAL", "traj.lammpstrj", "log.lammps") # Creates a file called traj.lammptrj.xyzf
+    helpers.xyz_to_dftbgen("traj.lammpstrj.xyzf") # Creates a file named traj.lammpstrj.gen
+    helpers.run_bash_cmnd("mv traj.lammpstrj.gen traj.gen")
  
     if os.path.isfile(args["basefile_dir"] + "case-" + str(my_case) + ".skip.dat"):
     
@@ -155,7 +160,6 @@ def run_md(my_ALC, my_case, my_indep, *argv, **kwargs):
     default_keys[14] = "job_email"     ; default_values[14] = True                           # Send slurm emails?
     default_keys[15] = "job_modules"   ; default_values[15] = ""                             # Send slurm emails?
 
-
     args = dict(list(zip(default_keys, default_values)))
     args.update(kwargs)    
     
@@ -222,7 +226,7 @@ def run_md(my_ALC, my_case, my_indep, *argv, **kwargs):
         # Set seed (velocity all create)
     
         if "seed equal" in runfile[i]:
-            ofstream.write("seed equal " + str(random.randint(0,9999)) + '\n')          
+            ofstream.write("variable seed equal " + str(random.randint(0,9999)) + '\n')          
         else:
             ofstream.write(runfile[i])
                 
@@ -236,14 +240,16 @@ def run_md(my_ALC, my_case, my_indep, *argv, **kwargs):
     
     # Create the task string
     
-    job_task = []
-    job_task.append("module load " + args["modules"] + '\n')
-    job_task.append("    srun -N " + repr(args["job_nodes" ]) + " -n " + repr(int(args["job_nodes"])*int(args["job_ppn"])) + " " + args["job_executable"] + " -i md_infile > out.lammps")
+    job_task = ""
     
+
     if args["job_system"] == "slurm":
-        job_task = "srun "   + job_task
+        job_task += "srun -N "   + repr(int(args["job_nodes" ])) + " -n " + repr(int(args["job_nodes"])*int(args["job_ppn"])) + " "
     else:
-        job_task = "mpirun " + job_task    
+        job_task += "mpirun -np" + repr(int(args["job_nodes" ])) + " -n " + repr(int(args["job_nodes"])*int(args["job_ppn"])) + " "
+        
+    job_task += args["job_executable"] + " -i " + md_infile + "  > out.lammps"
+         
     
     md_jobid = helpers.create_and_launch_job(
         job_name       =     args["job_name"    ] ,

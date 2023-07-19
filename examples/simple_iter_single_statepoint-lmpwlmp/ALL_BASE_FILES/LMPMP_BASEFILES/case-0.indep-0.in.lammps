@@ -3,7 +3,7 @@
 
 units           real        
 newton          on     
-atom_style      molecular # No charges as in full      
+atom_style      atomic # No charges as in full      
 atom_modify     sort 0 0.0 
 
 #### Neighbor list setup ####  
@@ -16,9 +16,9 @@ neigh_modify    delay 0 every 1 check yes
 #### Define some universal vars  
 # -- These lines are always needed, but the user can modify temp (temperature) and iofrq (output frequency)
 
-temp equal 500
-seed equal 1111  # This EXACT syntax is needed - ALD searches for "seed equal" with exactly one space.
-iofrq equal 10 
+variable temp equal 500
+variable seed equal 8679
+variable iofrq equal 10 
 
 
 #### Test case: United atom "propane"  
