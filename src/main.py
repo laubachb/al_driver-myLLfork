@@ -166,6 +166,18 @@ def main(args):
         print("Will use a smearing temperature of",SMEARING,"K")
     else:
         print("Will read smearing temperatures from traj_list.dat file")    
+        
+
+    # Needed for backward compatibility
+    
+    if hasattr(config, "CHIMES_MD_MPI") and not hasattr(config,"MD_MPI"):
+        config.MD_MPI = config.CHIMES_MD_MPI
+    
+    if hasattr(config, "CHIMES_MD_SER") and not hasattr(config,"MD_SER"):
+        config.MD_SER = config.CHIMES_MD_SER 
+        
+    if hasattr(config, "CHIMES_MD_MODULES") and not hasattr(config,"MD_MODULES"):
+        config.MD_MODULES = config.CHIMES_MD_MODULES         
 
     ################################
     ################################
@@ -250,7 +262,7 @@ def main(args):
                 active_job = gen_ff.build_amat(THIS_ALC,
                         do_hierarch        = config.DO_HIERARCH,
                         hierarch_files     = config.HIERARCH_PARAM_FILES,    
-                        hierarch_exe       = config.CHIMES_MD_SER,
+                        hierarch_exe       = config.MD_SER,
                         do_correction      = config.FIT_CORRECTION,
                         correction_method  = config.CORRECTED_TYPE,
                         correction_files   = config.CORRECTED_TYPE_FILES,
@@ -440,7 +452,7 @@ def main(args):
                         job_cent_walltime = str(config.CALC_REPO_ENER_CENT_TIME), 
                         job_account    = config.HPC_ACCOUNT, 
                         job_system     = config.HPC_SYSTEM,
-                        job_executable = config.CHIMES_MD_SER)    
+                        job_executable = config.MD_SER)    
                         
                 helpers.wait_for_jobs(active_jobs, job_system = config.HPC_SYSTEM, verbose = True, job_name = "get_repo_energies")
             
@@ -705,7 +717,7 @@ def main(args):
                     active_job = gen_ff.build_amat(THIS_ALC,
                             do_hierarch        = config.DO_HIERARCH,
                             hierarch_files     = config.HIERARCH_PARAM_FILES,
-                            hierarch_exe       = config.CHIMES_MD_SER,
+                            hierarch_exe       = config.MD_SER,
                             do_correction      = config.FIT_CORRECTION,
                             correction_method  = config.CORRECTED_TYPE,
                             correction_files   = config.CORRECTED_TYPE_FILES,
@@ -729,12 +741,12 @@ def main(args):
                         prev_qm_20_path  = qm_20F_path,
                         do_hierarch      = config.DO_HIERARCH,
                         hierarch_files   = config.HIERARCH_PARAM_FILES,    
-                        hierarch_exe     = config.CHIMES_MD_SER,
-                        do_correction      = config.FIT_CORRECTION,
-                        correction_method  = config.CORRECTED_TYPE,
-                        correction_files   = config.CORRECTED_TYPE_FILES,
-                        correction_exe     = config.CORRECTED_TYPE_EXE,                            
-                        correction_temps   = config.CORRECTED_TEMPS_BY_FILE,                        
+                        hierarch_exe     = config.MD_SER,
+                        do_correction    = config.FIT_CORRECTION,
+                        correction_method= config.CORRECTED_TYPE,
+                        correction_files = config.CORRECTED_TYPE_FILES,
+                        correction_exe   = config.CORRECTED_TYPE_EXE,                            
+                        correction_temps = config.CORRECTED_TEMPS_BY_FILE,                        
                         do_cluster       = config.DO_CLUSTER,
                         include_stress   = do_stress,    
                         stress_style     = config.STRS_STYLE,
@@ -871,7 +883,7 @@ def main(args):
                         driver_dir     = config.DRIVER_DIR,
                         penalty_pref   = 1.0E6,        
                         penalty_dist   = 0.02,         
-                        chimes_exe     = config.CHIMES_MD_SER,
+                        chimes_exe     = config.MD_SER,
                         job_name       = "ALC-"+ str(THIS_ALC) +"-md-c" + str(THIS_CASE) +"-i" + str(THIS_INDEP),
                         job_email      = config.HPC_EMAIL,            
                         job_ppn        = config.HPC_PPN,            
@@ -879,10 +891,10 @@ def main(args):
                         job_walltime   = config.MD_TIME [THIS_CASE],      
                         job_queue      = config.MD_QUEUE[THIS_CASE],      
                         job_account    = config.HPC_ACCOUNT, 
-                        job_executable = config.CHIMES_MD_MPI,     
+                        job_executable = config.MD_MPI,     
                         job_system     = "slurm",       
                         job_file       = "run.cmd",
-                        job_modules    = config.CHIMES_MD_MODULES
+                        job_modules    = config.MD_MODULES
                         )
                         
         
@@ -979,7 +991,7 @@ def main(args):
                             job_cent_walltime = str(config.CALC_REPO_ENER_CENT_TIME), 
                             job_account    = config.HPC_ACCOUNT, 
                             job_system     = config.HPC_SYSTEM,
-                            job_executable = config.CHIMES_MD_SER)    
+                            job_executable = config.MD_SER)    
                             
                     helpers.wait_for_jobs(active_jobs, job_system = config.HPC_SYSTEM, verbose = True, job_name = "get_repo_energies")
                 

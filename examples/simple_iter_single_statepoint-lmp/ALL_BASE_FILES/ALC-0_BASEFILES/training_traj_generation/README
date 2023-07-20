@@ -1,0 +1,5 @@
+Realized model likely not working because harmonic angles require bond lengths to be fully decoupled from 3-body energy; ChIMES cannot do this
+Recompiled with "make yes-user-yaff" to enable angle_style cross, which couples bonds and angles
+Re-ran LAMMPS to generate initial training set with:
+/home/rklinds/codes/chimes_calculator-myLLfork/etc/lmp/build/lammps_stable_29Oct2020/src/lmp_mpi_chimes -i in.lammps | tee out.lammps
+python ~/codes/al_driver-myLLfork/src/lmp_to_xyz.py  REAL traj.200F.lammpstrj log.lammps

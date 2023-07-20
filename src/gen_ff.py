@@ -80,9 +80,6 @@ def subtract(**kwargs):
         
     modify_FES.clean_up(args["method"])
         
-            
-
-
 def split_amat(amat, bvec, nproc, ppn):
 
     """ 
