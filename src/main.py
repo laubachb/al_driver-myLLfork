@@ -714,7 +714,7 @@ def main(args):
                 
                 if (not config.DO_CLUSTER) and (THIS_ALC == 1):    
                 
-                    active_job = gen_ff.build_amat(THIS_ALC,
+                    active_jobs = gen_ff.build_amat(THIS_ALC,
                             do_hierarch        = config.DO_HIERARCH,
                             hierarch_files     = config.HIERARCH_PARAM_FILES,
                             hierarch_exe       = config.MD_SER,
@@ -723,6 +723,7 @@ def main(args):
                             correction_files   = config.CORRECTED_TYPE_FILES,
                             correction_exe     = config.CORRECTED_TYPE_EXE,                            
                             correction_temps   = config.CORRECTED_TEMPS_BY_FILE,                            
+                            n_hyper_sets       = config.N_HYPER_SETS,
                             do_cluster         = config.DO_CLUSTER,
                             prev_gen_path      = config.ALC0_FILES,
                             job_email          = config.HPC_EMAIL,
@@ -736,7 +737,7 @@ def main(args):
                             job_modules        = config.CHIMES_LSQ_MODULES)    
                 else:
             
-                    active_job = gen_ff.build_amat(THIS_ALC, 
+                    active_jobs = gen_ff.build_amat(THIS_ALC, 
                         prev_qm_all_path = qm_all_path,
                         prev_qm_20_path  = qm_20F_path,
                         do_hierarch      = config.DO_HIERARCH,
@@ -746,7 +747,8 @@ def main(args):
                         correction_method= config.CORRECTED_TYPE,
                         correction_files = config.CORRECTED_TYPE_FILES,
                         correction_exe   = config.CORRECTED_TYPE_EXE,                            
-                        correction_temps = config.CORRECTED_TEMPS_BY_FILE,                        
+                        correction_temps = config.CORRECTED_TEMPS_BY_FILE,  
+                        n_hyper_sets     = config.N_HYPER_SETS,                      
                         do_cluster       = config.DO_CLUSTER,
                         include_stress   = do_stress,    
                         stress_style     = config.STRS_STYLE,
@@ -761,7 +763,10 @@ def main(args):
                         job_modules      = config.CHIMES_LSQ_MODULES
                         )
             
-                helpers.wait_for_job(active_job, job_system = config.HPC_SYSTEM, verbose = True, job_name = "build_amat")
+                if len(active_jobs) == 1:
+                    helpers.wait_for_job(active_jobs[0], job_system = config.HPC_SYSTEM, verbose = True, job_name = "build_amat")
+                else:
+                    helpers.wait_for_jobs(active_jobs, job_system = config.HPC_SYSTEM, verbose = True, job_name = "build_amat")                    
             
                 restart_controller.update_file("BUILD_AMAT: COMPLETE" + '\n')
                 
