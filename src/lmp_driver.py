@@ -247,8 +247,8 @@ def generate_datafile(inxyz, basedir, smearing):
         line = line[0:-3]
         
         linexyz = xyzstream.readline()
-        linexyz = linexyz.split()
-        
+        linexyz = linexyz.split()[1:]
+       
         lmpstream.write( ' '.join(line + linexyz) + '\n')
         
     # Read/print whatever in the data file comes after "Atoms"
@@ -547,7 +547,8 @@ def setup_lmp(my_ALC, *argv, **kwargs):
         job_task.append("for j in $(ls *\#*xyz.data.in)         ")
         job_task.append("do                             ")
         job_task.append("    TAG=${j%*.xyz.data.in}     ")      
-        job_task.append("    cp " + str(temp) + ".data.in data.in  ")
+#        job_task.append("    cp " + str(temp) + ".data.in data.in  ")
+        job_task.append("    cp $j data.in  ")
         job_task.append("    CHECK=${TAG}.out.lammps    ")
         job_task.append("    if [ -e ${CHECK} ] ; then  ")  
         job_task.append("        continue               ")

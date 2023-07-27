@@ -17,7 +17,7 @@ neigh_modify    delay 0 every 1 check yes
 # -- These lines are always needed, but the user can modify temp (temperature) and iofrq (output frequency)
 
 variable temp equal 500
-variable seed equal 8679
+variable seed equal 8514
 variable iofrq equal 10 
 
 
@@ -31,7 +31,7 @@ velocity        all create ${temp} ${seed} loop all mom yes rot yes dist gaussia
 #### Evaluate interactions with ChIMES ####  
 # -- These lines are always needed, exactly as is 
 
-pair_style      chimesFF
+pair_style      chimesFF fitting
 pair_coeff      * * params.txt.reduced
 
 

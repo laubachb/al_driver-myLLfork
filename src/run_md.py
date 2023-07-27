@@ -66,10 +66,6 @@ def run_md(my_ALC, my_case, my_indep, style, *argv, **kwargs):
                
     """
     
-    print("FYI-1:")
-    print(argv)
-    print(kwargs)
-    
     md_jobid = None
     
     if style == "CHIMES":

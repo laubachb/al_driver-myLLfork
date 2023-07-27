@@ -1229,7 +1229,7 @@ def verify(user_config):
         # Path to chimes_md executable
 
         print("WARNING: Defunct option config.CHIMES_MD was set")
-        print("         Ignoring. Will search for config.CHIMES_MD_SER and config.CHIMES_MD_MPI")
+        print("         Ignoring. Will search for config.MD_SER and config.MD_MPI")
 
     if not hasattr(user_config,'MD_SER'):
     
@@ -1238,9 +1238,9 @@ def verify(user_config):
             # Path to the serial chimes_md executable
 
             print("WARNING: Option config.MD_SER was not set")
-            print("         Will use config.CHIMES_SRCDIR + \"chimes_md-serial\"")
+            print("         Will use config.CHIMES_SRCDIR + \"../build/chimes_md-serial\"")
         
-            user_config.MD_SER = user_config.CHIMES_SRCDIR + "chimes_md-serial"        
+            user_config.MD_SER = user_config.CHIMES_SRCDIR + "../build/chimes_md-serial"        
 
         elif user_config.MD_STYLE == "DFTB":
 
@@ -1265,10 +1265,10 @@ def verify(user_config):
 
             # Path to chimes_md executable
 
-            print("WARNING: Option config.CHIMES_MD_MPI was not set")
-            print("         Will use config.CHIMES_SRCDIR + \"chimes_md-mpi\"")
+            print("WARNING: Option config.MD_MPI was not set")
+            print("         Will use config.CHIMES_SRCDIR + \"../build/chimes_md-mpi\"")
         
-            user_config.MD_MPI = user_config.CHIMES_SRCDIR + "chimes_md-mpi"
+            user_config.MD_MPI = user_config.CHIMES_SRCDIR + "../build/chimes_md-mpi"
 
         elif user_config.MD_STYLE == "DFTB":
     

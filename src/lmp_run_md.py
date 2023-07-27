@@ -10,6 +10,155 @@ import helpers
 import lmp_to_xyz
 import cluster
 
+
+def readframe(fstream,natoms):
+
+    frame = []
+    
+    for i in range(natoms+9):
+        
+        frame.append(fstream.readline())
+  
+    return frame, frame[1]
+    
+def writeframe(frame, badness, badstream0, badstream1, badstream2):
+
+    # Makes a .xyz file - assumes an orthorhombic box for now
+
+    target = None
+    
+    if int(badness) == 0:
+        target = badstream0
+    elif int(badness) == 1:
+        target = badstream1
+    elif int(badness) == 2:
+        target = badstream2
+    else:
+        print("Something strange happened... ")
+        print("In writeframe, badness is:",badness)
+        exit();
+        
+    boxl_x = frame[5]; boxl_x = boxl_x.split()[-1]
+    boxl_y = frame[6]; boxl_y = boxl_y.split()[-1]
+    boxl_z = frame[7]; boxl_z = boxl_z.split()[-1]
+    
+    xyz_text = []
+    xyz_text.append(frame[3]) # Number of atoms
+    xyz_text.append(boxl_x + " " + boxl_y + " " + boxl_z + '\n')
+    
+    fields = frame[8].split()
+    
+    elem = fields.index("element")-2
+    xcrd = fields.index("xu")-2     
+    ycrd = fields.index("yu")-2     
+    zcrd = fields.index("zu")-2     
+    
+    for i in range(9,9+int(frame[3])):
+    
+        line = frame[i].split()
+        xyz_text.append(line[elem] + " " + line[xcrd] + " " + line[ycrd] + " " + line[zcrd] + '\n')
+    
+
+    target.writelines(xyz_text)
+
+def generate_trajbads():
+
+    """ 
+    
+    Assumes traj.lammpstrj and rank-*.badness.log files are present in the current directory
+    
+    Generates the standard ChIMES_MD traj_bad.*.xyz files:
+    
+    - traj_bad_r.ge.rin+dp_dftbfrq.xyz
+    - traj_bad_r.lt.rin+dp.xyz
+    - traj_bad_r.lt.rin.xyz
+    
+    """
+    
+    # Sort badness data by step printed frame index
+
+    helpers.cat_pattern("tmp-1.bad","rank-*badness.log")
+    helpers.run_bash_cmnd_to_file("tmp-2.bad", "sort -nk1 tmp-1.bad")
+    helpers.run_bash_cmnd_to_file("tmp-3.bad", "uniq tmp-2.bad")
+
+    raw_badness = helpers.cat_to_var("tmp-3.bad")
+    raw_badness = [i.split() for i in raw_badness]
+
+
+    # Prepare to process the main trajectory file
+
+    traj_stream  = open("traj.lammpstrj",'r')
+    traj_natoms  = int(helpers.head("traj.lammpstrj",4)[-1])
+    traj_frames  = int(helpers.wc_l("traj.lammpstrj")/(traj_natoms+9))
+
+    #print("Expecting natoms per frame:", traj_natoms)
+    #print("Expecting nframes:         ", traj_frames)
+
+
+    # Create new files 
+
+    bad_0_stream = open("traj_bad_r.ge.rin+dp_dftbfrq.xyz",'w')
+    bad_1_stream = open("traj_bad_r.lt.rin+dp.xyz",'w')
+    bad_2_stream = open("traj_bad_r.lt.rin.xyz",'w')
+
+
+    # Process the files
+
+    bad_idx_start   = 0
+    bad_frame       = raw_badness[bad_idx_start][0]
+
+    for i in range(traj_frames):
+
+        # Read the frame
+        
+        #print("\n****Working on frame:",i)
+
+        contents,frame = readframe(traj_stream,traj_natoms)
+
+        # Determine the frame badness
+
+        badness = raw_badness[bad_idx_start][1] # Get the first badness assigned to this frame
+        
+        #print("here:",int(badness), "note:",len(raw_badness))
+        
+        for j in range(bad_idx_start, len(raw_badness)):
+        
+            #print("trying i,j:",i,j,"; raw has frame:",raw_badness[j][0], "trj has frame:",frame)
+        
+            if int(raw_badness[j][0]) != int(frame):
+                bad_idx_start = j
+                #print("\tBreaking - set start to:",bad_idx_start)
+                break
+            
+            elif int(raw_badness[j][1]) >= int(badness):
+                #print("\tUpdating badness to:",raw_badness[j][1])
+                badness = raw_badness[j][1]
+            else:
+                print("\tSomething strange happened...")
+                
+                print(raw_badness[j])
+                print("\tWhile working on frame  ",i)
+                print("\tj is              ",j)
+                print("\tj's badness is:   ", raw_badness[j][1])
+                print("\tCurrent badness is:" ,badness)  
+                
+                exit()
+                
+
+        # Print the frame to the correct file
+
+        writeframe(contents, badness, bad_0_stream, bad_1_stream, bad_2_stream)
+
+    bad_0_stream.close()
+    bad_1_stream.close()
+    bad_2_stream.close()   
+
+    helpers.run_bash_cmnd("rm -f traj-1.bad")
+    helpers.run_bash_cmnd("rm -f traj-1.bad")
+    helpers.run_bash_cmnd("rm -f traj-1.bad")
+        
+    
+
 def post_proc(my_ALC, my_case, my_indep, *argv, **kwargs):
 
     """ 
@@ -72,10 +221,6 @@ def post_proc(my_ALC, my_case, my_indep, *argv, **kwargs):
     
     # Convert the resulting trajectory file to .gen file named traj.gen
     
-    print(helpers.run_bash_cmnd("pwd"))
-    print(my_md_path)
-    print(helpers.run_bash_cmnd("ls"))
-    
     lmp_to_xyz.lmp_to_xyzf("REAL", "traj.lammpstrj", "log.lammps") # Creates a file called traj.lammptrj.xyzf
     helpers.xyz_to_dftbgen("traj.lammpstrj.xyzf") # Creates a file named traj.lammpstrj.gen
     helpers.run_bash_cmnd("mv traj.lammpstrj.gen traj.gen")
@@ -95,6 +240,7 @@ def post_proc(my_ALC, my_case, my_indep, *argv, **kwargs):
     # 2. Don't cluster, but use it's file paring utility to grab candidate 20F trajectories
     ################################
     
+    generate_trajbads()
     cluster.get_pared_trajs(False) # Argument: We will not prepare for cluster analysis, since it is incompatible with LAMMPS
         
 
