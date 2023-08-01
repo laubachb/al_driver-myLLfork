@@ -32,8 +32,8 @@ velocity        all create ${temp} ${seed} loop all mom yes rot yes dist gaussia
 # -- These lines are always needed, exactly as is 
 # -- The number of instances of "chimesFF fitting" should match the number of *.fm_setup.in files you create/fit
 pair_style      hybrid/overlay chimesFF fitting chimesFF fitting
-pair_coeff      chimesFF 1 * * params.txt.reduced
-pair_coeff      chimesFF 2 * * params.txt.reduced
+pair_coeff      chimesFF 1 * * 1.params.txt.reduced
+pair_coeff      chimesFF 2 * * 2.params.txt.reduced
 
 
 #### Initiate dynamics and set i/o  

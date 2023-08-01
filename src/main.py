@@ -2,6 +2,7 @@
 
 import os
 import sys
+import glob
 
 # Local modules
 
@@ -837,20 +838,44 @@ def main(args):
                         )    
                     
                     helpers.wait_for_job(active_job, job_system = config.HPC_SYSTEM, verbose = True, job_name = "restart_solve_amat")
+                
+                if config.N_HYPER_SETS > 1:
+                
+                    gen_ff.parse_hyper_params(
+                        n_hyper_sets     = config.N_HYPER_SETS, 
+                        job_executable   = config.CHIMES_SOLVER
+                        )
                     
                 
                 #if n_restarts > 0: # Then we need to manually build the parameter file
                 
-                if not os.path.isfile("GEN_FF/params.txt"):
+                if (not os.path.isfile("GEN_FF/params.txt")) and (config.N_HYPER_SETS == 1):
                     print("ERROR: No file ALC-" + repr(THIS_ALC) + "/GEN_FF/params.txt exists:")
                     print("Cannot post-process. Exiting.")
                     
                     exit()
+                else if config.N_HYPER_SETS > 1:
+                
+                    param_files =  glob.glob("GEN_FF-*/params.txt")
                     
-                if config.DO_HIERARCH:
+                    if len(param_file) < config.N_HYPER_SETS:
+                    
+                        print("ERROR: Didn't find expected number of parameter files (",config.N_HYPER_SETS, "):")
+                        print(param_files)
+                        print("Cannot post-process. Exiting.")
+                        
+                        exit()
+  
+                    
+                if config.DO_HIERARCH and config.N_HYPER_SET == 1:
                     gen_ff.combine("GEN_FF/params.txt", config.HIERARCH_PARAM_FILES)    
                     helpers.run_bash_cmnd(config.CHIMES_POSTPRC + " hierarch.params.txt")                    
                     helpers.run_bash_cmnd("mv  hierarch.params.txt.reduced GEN_FF/params.txt.reduced")                
+
+                else if config.N_HYPER_SETS > 1:
+                
+                    for i in range(config.N_HYPER_SETS):
+                        helpers.run_bash_cmnd(config.CHIMES_POSTPRC + " GEN_FF-" + str(i) + "/params.txt")
                 else:
                     
                     helpers.run_bash_cmnd(config.CHIMES_POSTPRC + " GEN_FF/params.txt")
@@ -888,6 +913,7 @@ def main(args):
                         driver_dir     = config.DRIVER_DIR,
                         penalty_pref   = 1.0E6,        
                         penalty_dist   = 0.02,         
+                        n_hyper_sets   = config.N_HYPER_SETS,     
                         chimes_exe     = config.MD_SER,
                         job_name       = "ALC-"+ str(THIS_ALC) +"-md-c" + str(THIS_CASE) +"-i" + str(THIS_INDEP),
                         job_email      = config.HPC_EMAIL,            

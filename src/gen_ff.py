@@ -372,10 +372,10 @@ def restart_solve_amat(my_ALC, **kwargs):
     
     # LSQ controls
     
-    default_keys[0 ] = "regression_alg"    ; default_values[0 ] =      "lassolars" # Regression algorithm to be used in lsq2
-    default_keys[1 ] = "regression_var"    ; default_values[1 ] =      "1.0E-4"    # SVD eps or Lasso alpha
-    default_keys[2 ] = "regression_nrm"    ; default_values[2 ] =    "True"        # Normalizes the a-mat by default ... may not give best result
-    default_keys[3 ] = "split_files"       ; default_values[3 ] =      False       # !!! UNUSED
+    default_keys[0 ] = "regression_alg"    ; default_values[0 ] =    "lassolars"  # Regression algorithm to be used in lsq2
+    default_keys[1 ] = "regression_var"    ; default_values[1 ] =    "1.0E-4"     # SVD eps or Lasso alpha
+    default_keys[2 ] = "regression_nrm"    ; default_values[2 ] =    "True"       # Normalizes the a-mat by default ... may not give best result
+    default_keys[3 ] = "split_files"       ; default_values[3 ] =     False       # !!! UNUSED
     
     # Overall job controls
     
@@ -532,10 +532,10 @@ def restart_solve_amat(my_ALC, **kwargs):
     run_py_jobid = helpers.create_and_launch_job(
         job_name       =     args["job_name"    ] ,
         job_email      =     args["job_email"   ] ,    
-        job_nodes      = str(args["job_nodes"    ]),
+        job_nodes      = str(args["job_nodes"   ]),
         job_ppn        = str(args["node_ppn"    ]),
         job_walltime   = str(args["job_walltime"]),
-        job_queue      =     args["job_queue"    ] ,
+        job_queue      =     args["job_queue"   ] ,
         job_account    =     args["job_account" ] ,
         job_executable =     job_task,
         job_system     =     args["job_system"  ] ,
@@ -544,6 +544,62 @@ def restart_solve_amat(my_ALC, **kwargs):
     os.chdir("..")
     
     return run_py_jobid.split()[0]
+    
+def parse_hyper_params(**kwargs):
+
+    """
+    
+    Post-process x.txt file from a fit with multiple unique fm_setup.in files that culminated in an A-matrix that was "pasted" from the A-matrix from each unique fm_setup.in
+    Result is a params.txt for each fm_setup.in
+
+
+    """
+    
+    ################################
+    # 0. Set up an argument parser
+    ################################
+    
+    default_keys   = [""]*2
+    default_values = [""]*2
+    
+    # Paths
+    
+    default_keys[0] = "n_hyper_sets"      ; default_values[0] =     1   # Number of unique fm_setup.in files; allows fitting, e.g., multiple overlapping models to the same data
+    default_keys[1] = "job_executable"    ; default_values[1] =     ""  # Full path to executable for ChIMES lsq job
+
+    args = dict(list(zip(default_keys, default_values)))
+    args.update(kwargs)    
+    
+     
+    # Read in all the raw parameters
+    
+    x = helpers.cat_to_var("GEN_FF/x.txt")
+    
+    # Determine how many parameters are associated with each GEN_FF-* folder
+    
+    dim  = []
+    npar = 0
+    
+    for i in range(int(args["n_hyper_sets"])):
+    
+        dim.append(int(helpers.head("GEN_FF-" + str(i) + "/dim.txt")[0].split()[0]))
+        
+        helpers.writelines("GEN_FF-" + str(i) + "/x.txt", x[npar:npar+dim[i]])
+        
+        npar += dim[i]
+
+        # Convert x.txt to a real params.txt file
+        
+        os.chdir("GEN_FF-" + str(i))
+        
+        print(" ...Generating param.txt file for GEN_FF-" + str(i))
+            
+        job_task = args["job_executable"] + "--read_output True | tee params.txt " 
+    
+        helpers.run_bash_cmnd(job_task)
+        
+        os.chdir("..")
+
 
 def build_amat(my_ALC, **kwargs):  
 
@@ -899,8 +955,8 @@ def solve_amat(my_ALC, **kwargs):
     # 0. Set up an argument parser
     ################################
     
-    default_keys   = [""]*23
-    default_values = [""]*23
+    default_keys   = [""]*24
+    default_values = [""]*24
     
     # Weights
     
@@ -920,6 +976,8 @@ def solve_amat(my_ALC, **kwargs):
     default_keys[7 ] = "regression_var"    ; default_values[7 ] =     "1.0E-4"    # SVD eps or Lasso alpha
     default_keys[8 ] = "regression_nrm"    ; default_values[8 ] =     "True"      # Normalizes the a-mat by default ... may not give best result
     default_keys[9 ] = "split_files"       ; default_values[9 ] =     False       # !!! UNUSED
+    default_keys[24] = "n_hyper_sets"      ; default_values[24] =     1                      # Number of unique fm_setup.in files; allows fitting, e.g., multiple overlapping models to the same data
+    
     
     # Overall job controls
     
@@ -943,6 +1001,17 @@ def solve_amat(my_ALC, **kwargs):
     # 1. Generate weights for the current ALC's trajectory
     ################################
     
+    if int(args["n_hyper_sets"]) > 1: # Then we need to collate our GEN_FF-X folders into a single GEN_FF
+    
+        helpers.run_bash_cmnd("mkdir GEN_FF")
+        
+        helpers.run_bash_cmnd("cp GEN_FF-1/b.txt GEN_FF")
+        for i in int(range(args["n_hyper_sets"])):
+              
+            helpers.run_bash_cmnd("paste  GEN_FF/A.txt GEN_FF-" + str(i) + "/A.txt > tmp")
+            helpers.run_bash_cmnd("mv tmp GEN_FF/A.txt")                
+    
+
     os.chdir("GEN_FF")
     helpers.run_bash_cmnd("rm -f weights.dat")
     
@@ -1091,6 +1160,9 @@ def solve_amat(my_ALC, **kwargs):
         
     job_task += " --b b_comb.txt --weights weights_comb.dat --algorithm " + args["regression_alg"]  + " "
     
+    if int(args["n_hyper_sets"]) > 1:
+        job_task += "--hyper_sets True " 
+          
     if "dlasso" in args["regression_alg"]:
         job_task += "--active True " 
         job_task += "--alpha " + str(args["regression_var"])  + " "    
