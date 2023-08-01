@@ -2,6 +2,7 @@
 
 import os
 import sys
+import glob
 
 # Local modules
 
@@ -714,7 +715,7 @@ def main(args):
                 
                 if (not config.DO_CLUSTER) and (THIS_ALC == 1):    
                 
-                    active_job = gen_ff.build_amat(THIS_ALC,
+                    active_jobs = gen_ff.build_amat(THIS_ALC,
                             do_hierarch        = config.DO_HIERARCH,
                             hierarch_files     = config.HIERARCH_PARAM_FILES,
                             hierarch_exe       = config.MD_SER,
@@ -723,6 +724,7 @@ def main(args):
                             correction_files   = config.CORRECTED_TYPE_FILES,
                             correction_exe     = config.CORRECTED_TYPE_EXE,                            
                             correction_temps   = config.CORRECTED_TEMPS_BY_FILE,                            
+                            n_hyper_sets       = config.N_HYPER_SETS,
                             do_cluster         = config.DO_CLUSTER,
                             prev_gen_path      = config.ALC0_FILES,
                             job_email          = config.HPC_EMAIL,
@@ -736,7 +738,7 @@ def main(args):
                             job_modules        = config.CHIMES_LSQ_MODULES)    
                 else:
             
-                    active_job = gen_ff.build_amat(THIS_ALC, 
+                    active_jobs = gen_ff.build_amat(THIS_ALC, 
                         prev_qm_all_path = qm_all_path,
                         prev_qm_20_path  = qm_20F_path,
                         do_hierarch      = config.DO_HIERARCH,
@@ -746,7 +748,8 @@ def main(args):
                         correction_method= config.CORRECTED_TYPE,
                         correction_files = config.CORRECTED_TYPE_FILES,
                         correction_exe   = config.CORRECTED_TYPE_EXE,                            
-                        correction_temps = config.CORRECTED_TEMPS_BY_FILE,                        
+                        correction_temps = config.CORRECTED_TEMPS_BY_FILE,  
+                        n_hyper_sets     = config.N_HYPER_SETS,                      
                         do_cluster       = config.DO_CLUSTER,
                         include_stress   = do_stress,    
                         stress_style     = config.STRS_STYLE,
@@ -761,7 +764,10 @@ def main(args):
                         job_modules      = config.CHIMES_LSQ_MODULES
                         )
             
-                helpers.wait_for_job(active_job, job_system = config.HPC_SYSTEM, verbose = True, job_name = "build_amat")
+                if len(active_jobs) == 1:
+                    helpers.wait_for_job(active_jobs[0], job_system = config.HPC_SYSTEM, verbose = True, job_name = "build_amat")
+                else:
+                    helpers.wait_for_jobs(active_jobs, job_system = config.HPC_SYSTEM, verbose = True, job_name = "build_amat")                    
             
                 restart_controller.update_file("BUILD_AMAT: COMPLETE" + '\n')
                 
@@ -832,20 +838,44 @@ def main(args):
                         )    
                     
                     helpers.wait_for_job(active_job, job_system = config.HPC_SYSTEM, verbose = True, job_name = "restart_solve_amat")
+                
+                if config.N_HYPER_SETS > 1:
+                
+                    gen_ff.parse_hyper_params(
+                        n_hyper_sets     = config.N_HYPER_SETS, 
+                        job_executable   = config.CHIMES_SOLVER
+                        )
                     
                 
                 #if n_restarts > 0: # Then we need to manually build the parameter file
                 
-                if not os.path.isfile("GEN_FF/params.txt"):
+                if (not os.path.isfile("GEN_FF/params.txt")) and (config.N_HYPER_SETS == 1):
                     print("ERROR: No file ALC-" + repr(THIS_ALC) + "/GEN_FF/params.txt exists:")
                     print("Cannot post-process. Exiting.")
                     
                     exit()
+                else if config.N_HYPER_SETS > 1:
+                
+                    param_files =  glob.glob("GEN_FF-*/params.txt")
                     
-                if config.DO_HIERARCH:
+                    if len(param_file) < config.N_HYPER_SETS:
+                    
+                        print("ERROR: Didn't find expected number of parameter files (",config.N_HYPER_SETS, "):")
+                        print(param_files)
+                        print("Cannot post-process. Exiting.")
+                        
+                        exit()
+  
+                    
+                if config.DO_HIERARCH and config.N_HYPER_SET == 1:
                     gen_ff.combine("GEN_FF/params.txt", config.HIERARCH_PARAM_FILES)    
                     helpers.run_bash_cmnd(config.CHIMES_POSTPRC + " hierarch.params.txt")                    
                     helpers.run_bash_cmnd("mv  hierarch.params.txt.reduced GEN_FF/params.txt.reduced")                
+
+                else if config.N_HYPER_SETS > 1:
+                
+                    for i in range(config.N_HYPER_SETS):
+                        helpers.run_bash_cmnd(config.CHIMES_POSTPRC + " GEN_FF-" + str(i) + "/params.txt")
                 else:
                     
                     helpers.run_bash_cmnd(config.CHIMES_POSTPRC + " GEN_FF/params.txt")
@@ -883,6 +913,7 @@ def main(args):
                         driver_dir     = config.DRIVER_DIR,
                         penalty_pref   = 1.0E6,        
                         penalty_dist   = 0.02,         
+                        n_hyper_sets   = config.N_HYPER_SETS,     
                         chimes_exe     = config.MD_SER,
                         job_name       = "ALC-"+ str(THIS_ALC) +"-md-c" + str(THIS_CASE) +"-i" + str(THIS_INDEP),
                         job_email      = config.HPC_EMAIL,            

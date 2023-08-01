@@ -39,6 +39,7 @@ def print_help():
     PARAM.append("CHIMES_LSQ");                     VARTYP.append("str");           DETAILS.append("ChIMES_lsq executable absolute path (e.g. CHIMES_SRCDIR + \"chimes_lsq\")")
     PARAM.append("CHIMES_SOLVER");                  VARTYP.append("str");           DETAILS.append("lsq2.py executable absolute path (e.g. CHIMES_SRCDIR + \"lsq2.py\")")
     PARAM.append("CHIMES_POSTPRC");                 VARTYP.append("str");           DETAILS.append("post_proc_lsq2.py executable absolute path (e.g. CHIMES_SRCDIR + \"post_proc_lsq2.py\")")
+    PARAM.append("N_HYPER_SETS");                   VARTYP.append("int");           DETAILS.append("Number of unique fm_setup.in files; allows fitting, e.g., multiple overlapping models to the same data")
     PARAM.append("WEIGHTS_SET_ALC_0");              VARTYP.append("bool");          DETAILS.append("Should ALC-0 (or 1 if no clustering) weights be read directly from a user specified file? ")
     PARAM.append("WEIGHTS_ALC_0");                  VARTYP.append("str");           DETAILS.append("Set if WEIGHTS_SET_ALC_0 is true; path to user specified ALC-0 (or ALC-1) weights ")
     PARAM.append("WEIGHTS_FORCE");                  VARTYP.append("list");          DETAILS.append("Weight/method to apply to bulk forces during A-matrix solution ")
@@ -58,7 +59,7 @@ def print_help():
     PARAM.append("CHIMES_SOLVE_TIME");              VARTYP.append("str");           DETAILS.append("Walltime for lsq2.py/DLARS (lassolars) job (e.g. \"04:00:00\")")
     PARAM.append("MD_STYLE");                       VARTYP.append("str");           DETAILS.append("Should MD simulations be run as ChIMES-only (\"CHIMES\") or DFTB+ChIMES (\"DFTB\")?")    
     PARAM.append("MOLANAL");                        VARTYP.append("str");           DETAILS.append("Absolute path to the molanal src directory")
-    PARAM.append("MD_FILES");                        VARTYP.append("str");           DETAILS.append("Absolute path to MD input files like case-0.indep-0.run_md.in (e.g. WORKING_DIR + \"ALL_BASE_FILES/CHIMESMD_FILES\")")
+    PARAM.append("MD_FILES";                        VARTYP.append("str");           DETAILS.append("Absolute path to MD input files like case-0.indep-0.run_md.in (e.g. WORKING_DIR + \"ALL_BASE_FILES/CHIMESMD_FILES\")")
     PARAM.append("MD_NODES");                       VARTYP.append("int");           DETAILS.append("Number of nodes to use when running md simulations")
     PARAM.append("MD_QUEUE");                       VARTYP.append("str");           DETAILS.append("Queue to submit md simulations to to")
     PARAM.append("MD_TIME");                        VARTYP.append("str");           DETAILS.append("Walltime for md simulations (e.g. \"04:00:00\")")
@@ -1029,6 +1030,14 @@ def verify(user_config):
         
         user_config.CHIMES_SOLVER = user_config.CHIMES_SRCDIR + "/../build/post_proc_chimes_lsq.py"
 
+    if not hasattr(user_config,'N_HYPER_SETS'):
+
+        # Number of unique fm_setup.in files; allows fitting, e.g., multiple overlapping models to the same data 
+
+        print("WARNING: Option config.N_HYPER_SETS was not set")
+        print("         Will set to a value of 1 (old mode)")
+
+        user_config.N_HYPER_SETS = 1
 
     if not hasattr(user_config,'WEIGHTS_SET_ALC_0'):
 

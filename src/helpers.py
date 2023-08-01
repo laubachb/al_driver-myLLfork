@@ -96,7 +96,7 @@ def writelines(outfile, contents, nlines=-1):
     
     A one-liner wrapper to open, write all contents of a list, and close a file
     
-    Usage: writelines("my_file.txt") or writelines("my_file.txt",10)
+    Usage: writelines("my_file.txt", my_list) or writelines("my_file.txt", my_list, 10)
     
     Notes: Make sure lines contain '\n'
 

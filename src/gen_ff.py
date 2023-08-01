@@ -372,10 +372,10 @@ def restart_solve_amat(my_ALC, **kwargs):
     
     # LSQ controls
     
-    default_keys[0 ] = "regression_alg"    ; default_values[0 ] =      "lassolars" # Regression algorithm to be used in lsq2
-    default_keys[1 ] = "regression_var"    ; default_values[1 ] =      "1.0E-4"    # SVD eps or Lasso alpha
-    default_keys[2 ] = "regression_nrm"    ; default_values[2 ] =    "True"        # Normalizes the a-mat by default ... may not give best result
-    default_keys[3 ] = "split_files"       ; default_values[3 ] =      False       # !!! UNUSED
+    default_keys[0 ] = "regression_alg"    ; default_values[0 ] =    "lassolars"  # Regression algorithm to be used in lsq2
+    default_keys[1 ] = "regression_var"    ; default_values[1 ] =    "1.0E-4"     # SVD eps or Lasso alpha
+    default_keys[2 ] = "regression_nrm"    ; default_values[2 ] =    "True"       # Normalizes the a-mat by default ... may not give best result
+    default_keys[3 ] = "split_files"       ; default_values[3 ] =     False       # !!! UNUSED
     
     # Overall job controls
     
@@ -532,10 +532,10 @@ def restart_solve_amat(my_ALC, **kwargs):
     run_py_jobid = helpers.create_and_launch_job(
         job_name       =     args["job_name"    ] ,
         job_email      =     args["job_email"   ] ,    
-        job_nodes      = str(args["job_nodes"    ]),
+        job_nodes      = str(args["job_nodes"   ]),
         job_ppn        = str(args["node_ppn"    ]),
         job_walltime   = str(args["job_walltime"]),
-        job_queue      =     args["job_queue"    ] ,
+        job_queue      =     args["job_queue"   ] ,
         job_account    =     args["job_account" ] ,
         job_executable =     job_task,
         job_system     =     args["job_system"  ] ,
@@ -544,6 +544,62 @@ def restart_solve_amat(my_ALC, **kwargs):
     os.chdir("..")
     
     return run_py_jobid.split()[0]
+    
+def parse_hyper_params(**kwargs):
+
+    """
+    
+    Post-process x.txt file from a fit with multiple unique fm_setup.in files that culminated in an A-matrix that was "pasted" from the A-matrix from each unique fm_setup.in
+    Result is a params.txt for each fm_setup.in
+
+
+    """
+    
+    ################################
+    # 0. Set up an argument parser
+    ################################
+    
+    default_keys   = [""]*2
+    default_values = [""]*2
+    
+    # Paths
+    
+    default_keys[0] = "n_hyper_sets"      ; default_values[0] =     1   # Number of unique fm_setup.in files; allows fitting, e.g., multiple overlapping models to the same data
+    default_keys[1] = "job_executable"    ; default_values[1] =     ""  # Full path to executable for ChIMES lsq job
+
+    args = dict(list(zip(default_keys, default_values)))
+    args.update(kwargs)    
+    
+     
+    # Read in all the raw parameters
+    
+    x = helpers.cat_to_var("GEN_FF/x.txt")
+    
+    # Determine how many parameters are associated with each GEN_FF-* folder
+    
+    dim  = []
+    npar = 0
+    
+    for i in range(int(args["n_hyper_sets"])):
+    
+        dim.append(int(helpers.head("GEN_FF-" + str(i) + "/dim.txt")[0].split()[0]))
+        
+        helpers.writelines("GEN_FF-" + str(i) + "/x.txt", x[npar:npar+dim[i]])
+        
+        npar += dim[i]
+
+        # Convert x.txt to a real params.txt file
+        
+        os.chdir("GEN_FF-" + str(i))
+        
+        print(" ...Generating param.txt file for GEN_FF-" + str(i))
+            
+        job_task = args["job_executable"] + "--read_output True | tee params.txt " 
+    
+        helpers.run_bash_cmnd(job_task)
+        
+        os.chdir("..")
+
 
 def build_amat(my_ALC, **kwargs):  
 
@@ -570,8 +626,8 @@ def build_amat(my_ALC, **kwargs):
     # 0. Set up an argument parser
     ################################
     
-    default_keys   = [""]*25
-    default_values = [""]*25
+    default_keys   = [""]*26
+    default_values = [""]*26
     
     # Paths
     
@@ -590,31 +646,42 @@ def build_amat(my_ALC, **kwargs):
     default_keys[12] = "correction_files"  ; default_values[12] =     None                   # Path to directory containng files needed for calculating interactions via method to be corrected
     default_keys[13] = "correction_exe"    ; default_values[13] =     None                   # Executable for method being corrected
     default_keys[14] = "correction_temps"  ; default_values[14] =     None                   # How to handle electron temperatures for 1st ALC
+    default_keys[15] = "n_hyper_sets"      ; default_values[15] =     1                      # Number of unique fm_setup.in files; allows fitting, e.g., multiple overlapping models to the same data
     
     
         
     # Job controls
     
-    default_keys[15] = "job_name"          ; default_values[15] =     "ALC-"+ repr(my_ALC)+"-lsq-1"   # Name for ChIMES lsq job
-    default_keys[16] = "job_nodes"         ; default_values[16] =     "2"                             # Number of nodes for ChIMES lsq job
-    default_keys[17] = "job_ppn"           ; default_values[17] =     "36"                            # Number of processors per node for ChIMES lsq job
-    default_keys[18] = "job_walltime"      ; default_values[18] =     "1"                             # Walltime in hours for ChIMES lsq job
-    default_keys[19] = "job_queue"         ; default_values[19] =     "pdebug"                        # Queue for ChIMES lsq job
-    default_keys[20] = "job_account"       ; default_values[20] =     "pbronze"                       # Account for ChIMES lsq job
-    default_keys[21] = "job_executable"    ; default_values[21] =     ""                              # Full path to executable for ChIMES lsq job
-    default_keys[22] = "job_system"        ; default_values[22] =     "slurm"                         # slurm or torque    
-    default_keys[23] = "job_email"         ; default_values[23] =      True                           # Send slurm emails?
-    default_keys[24] = "job_modules"       ; default_values[24] =     ""                              # Modules for the job
+    default_keys[16] = "job_name"          ; default_values[16] =     "ALC-"+ repr(my_ALC)+"-lsq-1"   # Name for ChIMES lsq job
+    default_keys[17] = "job_nodes"         ; default_values[17] =     "2"                             # Number of nodes for ChIMES lsq job
+    default_keys[18] = "job_ppn"           ; default_values[18] =     "36"                            # Number of processors per node for ChIMES lsq job
+    default_keys[19] = "job_walltime"      ; default_values[19] =     "1"                             # Walltime in hours for ChIMES lsq job
+    default_keys[20] = "job_queue"         ; default_values[20] =     "pdebug"                        # Queue for ChIMES lsq job
+    default_keys[21] = "job_account"       ; default_values[21] =     "pbronze"                       # Account for ChIMES lsq job
+    default_keys[22] = "job_executable"    ; default_values[22] =     ""                              # Full path to executable for ChIMES lsq job
+    default_keys[23] = "job_system"        ; default_values[23] =     "slurm"                         # slurm or torque    
+    default_keys[24] = "job_email"         ; default_values[24] =      True                           # Send slurm emails?
+    default_keys[25] = "job_modules"       ; default_values[25] =     ""                              # Modules for the job
 
     args = dict(list(zip(default_keys, default_values)))
     args.update(kwargs)
     
     ################################
-    # 1. Create the GEN_FF directory
+    # 1. Create the GEN_FF directory(s)
     ################################
     
-    helpers.run_bash_cmnd("rm -rf GEN_FF")
-    helpers.run_bash_cmnd("mkdir  GEN_FF")
+    
+    if int(args["n_hyper_sets"]) == 1:
+    
+        helpers.run_bash_cmnd("rm -rf GEN_FF")
+        helpers.run_bash_cmnd("mkdir  GEN_FF")
+        
+    else:
+    
+        for i in range(int(args["n_hyper_sets"])):
+        
+            helpers.run_bash_cmnd("rm -rf GEN_FF-" + str(i))
+            helpers.run_bash_cmnd("mkdir  GEN_FF-" + str(i))       
     
     ################################
     # 2. grab the fm.in and trajlist.in previous iteration, update the contents
@@ -622,224 +689,241 @@ def build_amat(my_ALC, **kwargs):
     
     nfiles      = 0
     nframes_all = 0
-    nframes_20  = 0    
-        
-    if (my_ALC == 0) or ((my_ALC == 1) and (not args["do_cluster"])):
-        helpers.run_bash_cmnd("cp " + args["prev_gen_path"] + "/fm_setup.in"   + " GEN_FF/fm_setup.in")
-        helpers.run_bash_cmnd("cp " + args["prev_gen_path"] + "/traj_list.dat" + " GEN_FF/traj_list.dat")
-        
-        if len(glob.glob(args["prev_gen_path"] + "/*xyzf"  )) > 0:
-            helpers.run_bash_cmnd("cp " + ' '.join(glob.glob(args["prev_gen_path"] + "/*xyzf"  )) + " GEN_FF/")
-        else:
-            print("FYI: No .xyzf files to copy from basefiles to GEN_FF")
-        
-        if (args["do_correction"] and args["correction_temps"]) or (args["do_hierarch"]):
-            helpers.run_bash_cmnd("cp " + ' '.join(glob.glob(args["prev_gen_path"] + "/*temps"  )) + " GEN_FF/")
+    nframes_20  = 0  
+    
+    lsq_jobs = []
+       
+    for i in range(int(args["n_hyper_sets"])):
+   
+        GEN_FF   = "GEN_FF"
+        FM_SETUP = "fm_setup.in"
+       
+        if int(args["n_hyper_sets"]) > 1:
+       
+            GEN_FF  += "-" + str(i)
+            FM_SETUP = str(i) + "." + FM_SETUP      
+   
+    
+        if (my_ALC == 0) or ((my_ALC == 1) and (not args["do_cluster"])):
             
-        nfiles = int(helpers.head("GEN_FF/traj_list.dat",1)[0])
-        
-        # Generate the temperature files
-        
-        if not args["correction_temps"]:
-        
-            file_list = helpers.head("GEN_FF/traj_list.dat",nfiles+1)[1:]
-
-            for i in range(nfiles):
-
-                line = file_list[i].split()
-        
-                tmp_frames = int(line[0])
-                tmp_file   =     line[1]
-                
-                if args["do_correction"]:
-                    tmp_temp   =     line[2]
-
-                    ofstream = open("GEN_FF/" + '.'.join(tmp_file.split(".")[0:-1])+".temps",'w')
-
-                    for j in range(tmp_frames):
-                        ofstream.write(tmp_temp + '\n')
-                    ofstream.close()    
-    else:
-
-        helpers.run_bash_cmnd("cp " + ' '.join(glob.glob(args["prev_gen_path"] + "/*fm_setup.in"  )) + " GEN_FF/fm_setup.in")
-        helpers.run_bash_cmnd("cp " + ' '.join(glob.glob(args["prev_gen_path"] + "/*traj_list.dat")) + " GEN_FF/traj_list.dat")
-
-        # Get the number of files and number of frames in each file
-
-        if args["prev_qm_all_path"] and args["do_cluster"]:
-    
-            nfiles     += 1
-            nframes_all = helpers.count_xyzframes_general(args["prev_qm_all_path"] + "/OUTCAR.xyzf")
-
-        if args["prev_qm_20_path"]:
-    
-            nfiles    += 1    
-            nframes_20 = helpers.count_xyzframes_general(args["prev_qm_20_path"] + "/OUTCAR.xyzf")
+            helpers.run_bash_cmnd("cp " + args["prev_gen_path"] + "/" + FM_SETUP   + " " + GEN_FF + "/fm_setup.in")
+            helpers.run_bash_cmnd("cp " + args["prev_gen_path"] + "/traj_list.dat" + " " + GEN_FF + "/traj_list.dat")
             
-        # Update the fm_setup.in file
-    
-    
-        ifstream = open("GEN_FF/fm_setup.in",'r')
-        runfile  = ifstream.readlines()
-    
-        ofstream = open("tmp",'w')    
-    
-        found1 = False
-        found2 = False
-        found3 = False
-    
-        for i in range(len(runfile)):
-    
-            if found1:
-                ofstream.write('\t' + "MULTI traj_list.dat" + '\n')
-                found1 = False
-                
-            elif found2:
-                ofstream.write('\t' + str(nframes_20+nframes_all) + '\n')
-                found2 = False
-                    
-            elif found3:
-            
-                if args["include_stress"]:
-                    if  args["stress_style"] == "DIAG":
-                        
-                        print("Warning: Fitting first",nframes_20,"diagonal stress tensor components for ALC >",my_ALC)
-                        
-                        ofstream.write('\t' + "FIRST "    +repr(nframes_20) +'\n')
-                        
-                        
-                    elif args["stress_style"] == "ALL":
-                    
-                        print("Warning: Fitting first",nframes_20,"total stress tensor components for ALC >",my_ALC)
-                    
-                        ofstream.write('\t' + "FIRSTALL " +repr(nframes_20) +'\n')
-                    else:
-                        print("ERROR: Unknown stress style:",args["stress_style"])
-                        print("       Options are \"DIAG\" or \"ALL\"")
-                        print("Exiting.")
-                        
-                        exit()
-
-                else:
-                    print("Warning: Setting FITSTRS false for ALC >",my_ALC)
-                    ofstream.write('\t' + "false" + '\n')
-        
-                found3 = False    
+            if len(glob.glob(args["prev_gen_path"] + "/*xyzf"  )) > 0:
+                helpers.run_bash_cmnd("cp " + ' '.join(glob.glob(args["prev_gen_path"] + "/*xyzf"  )) + " " + GEN_FF + "/")
             else:
-    
-                ofstream.write(runfile[i])
-    
-                if "TRJFILE" in runfile[i]:
-                    found1 = True
-                    
-                if "NFRAMES" in runfile[i]:
-                    found2 = True    
-                    
-                if "FITSTRS" in runfile[i]:
-                    found3 = True            
+                print("FYI: No .xyzf files to copy from basefiles to " + GEN_FF)
+            
+            if (args["do_correction"] and args["correction_temps"]) or (args["do_hierarch"]):
+                helpers.run_bash_cmnd("cp " + ' '.join(glob.glob(args["prev_gen_path"] + "/*temps"  )) + " " + GEN_FF + "/")
                 
-        ofstream.close()
-        ifstream.close()
+            nfiles = int(helpers.head(GEN_FF + "/traj_list.dat",1)[0])
+    
+            # Generate the temperature files
+            
+            if not args["correction_temps"]:
+            
+                file_list = helpers.head(GEN_FF + "/traj_list.dat",nfiles+1)[1:]
+            
+                for i in range(nfiles):
+            
+                    line = file_list[i].split()
+            
+                    tmp_frames = int(line[0])
+                    tmp_file   =     line[1]
+                    
+                    if args["do_correction"]:
+                        tmp_temp   =     line[2]
+            
+                        ofstream = open(GEN_FF + "/" + '.'.join(tmp_file.split(".")[0:-1])+".temps",'w')
+            
+                        for j in range(tmp_frames):
+                            ofstream.write(tmp_temp + '\n')
+                        ofstream.close()    
+    
+        else:
+    
+            helpers.run_bash_cmnd("cp " + args["prev_gen_path"] + "/" + FM_SETUP + " " + GEN_FF + "/fm_setup.in")
+            helpers.run_bash_cmnd("cp " + args["prev_gen_path"] + "/traj_list.dat" + " " + GEN_FF + "/traj_list.dat")
+    
+            # Get the number of files and number of frames in each file
+    
+            if args["prev_qm_all_path"] and args["do_cluster"]:
+    
+                nfiles     += 1
+                nframes_all = helpers.count_xyzframes_general(args["prev_qm_all_path"] + "/OUTCAR.xyzf")
+    
+            if args["prev_qm_20_path"]:
+    
+                nfiles    += 1    
+                nframes_20 = helpers.count_xyzframes_general(args["prev_qm_20_path"] + "/OUTCAR.xyzf")
+                
+            # Update the fm_setup.in file
+    
+    
+            ifstream = open(GEN_FF + "/fm_setup.in",'r')
+            runfile  = ifstream.readlines()
+    
+            ofstream = open("tmp",'w')    
+    
+            found1 = False
+            found2 = False
+            found3 = False
+    
+            for i in range(len(runfile)):
+    
+                if found1:
+                    ofstream.write('\t' + "MULTI traj_list.dat" + '\n')
+                    found1 = False
+                    
+                elif found2:
+                    ofstream.write('\t' + str(nframes_20+nframes_all) + '\n')
+                    found2 = False
                         
-        helpers.run_bash_cmnd("mv tmp GEN_FF/fm_setup.in")                
-
-
-        # Update the traj_list file
+                elif found3:
+                
+                    if args["include_stress"]:
+                        if  args["stress_style"] == "DIAG":
+                            
+                            print("Warning: Fitting first",nframes_20,"diagonal stress tensor components for ALC >",my_ALC)
+                            
+                            ofstream.write('\t' + "FIRST "    +repr(nframes_20) +'\n')
+                            
+                            
+                        elif args["stress_style"] == "ALL":
+                        
+                            print("Warning: Fitting first",nframes_20,"total stress tensor components for ALC >",my_ALC)
+                        
+                            ofstream.write('\t' + "FIRSTALL " +repr(nframes_20) +'\n')
+                        else:
+                            print("ERROR: Unknown stress style:",args["stress_style"])
+                            print("       Options are \"DIAG\" or \"ALL\"")
+                            print("Exiting.")
+                            
+                            exit()
     
-        ifstream = open("GEN_FF/traj_list.dat",'w')
-        ifstream.write(repr(nfiles) + '\n')
-
-        if args["prev_qm_20_path"]:
-            ifstream.write(repr(nframes_20)  + " " + args["prev_qm_20_path"]  + "/OUTCAR.xyzf\n")
-
-        if args["prev_qm_all_path"] and args["do_cluster"]:
-            ifstream.write(repr(nframes_all) + " " + args["prev_qm_all_path"] + "/OUTCAR.xyzf G_ G_ G_\n")
+                    else:
+                        print("Warning: Setting FITSTRS false for ALC >",my_ALC)
+                        ofstream.write('\t' + "false" + '\n')
             
-        ifstream.close()
-        
-    ################################
-    # 2a. Pre-processing:
-    #     ... If hierarchical building is being used, subtract off contributions from other parameter files
-    #     ... If fitting a correction, subtract off contributions from the base method
-    ################################
+                    found3 = False    
+                else:
     
-    n_traj_files = int(helpers.head("GEN_FF/traj_list.dat",1)[-1])
-    traj_files   = helpers.head("GEN_FF/traj_list.dat",nfiles+1)[1:]
-    temper_file  = []
+                    ofstream.write(runfile[i])
     
-    # Get trajectory files
+                    if "TRJFILE" in runfile[i]:
+                        found1 = True
+                        
+                    if "NFRAMES" in runfile[i]:
+                        found2 = True    
+                        
+                    if "FITSTRS" in runfile[i]:
+                        found3 = True            
+                    
+            ofstream.close()
+            ifstream.close()
+                            
+            helpers.run_bash_cmnd("mv tmp " + GEN_FF + "/fm_setup.in")                
 
-    if (my_ALC == 0) or ((my_ALC == 1) and (not args["do_cluster"])):
-        for i in range(n_traj_files):
-            traj_files[i] = "GEN_FF/" + traj_files[i].split()[1]
-    else:
-        for i in range(n_traj_files):
-            traj_files[i] = traj_files[i].split()[1]
+    
+            # Update the traj_list file
+    
+            ifstream = open(GEN_FF + "/traj_list.dat",'w')
+            ifstream.write(repr(nfiles) + '\n')
+    
+            if args["prev_qm_20_path"]:
+                ifstream.write(repr(nframes_20)  + " " + args["prev_qm_20_path"]  + "/OUTCAR.xyzf\n")
+    
+            if args["prev_qm_all_path"] and args["do_cluster"]:
+                ifstream.write(repr(nframes_all) + " " + args["prev_qm_all_path"] + "/OUTCAR.xyzf G_ G_ G_\n")
+                
+            ifstream.close()
             
-    for i in range(n_traj_files):
+        ################################
+        # 2a. Pre-processing:
+        #     ... If hierarchical building is being used, subtract off contributions from other parameter files
+        #     ... If fitting a correction, subtract off contributions from the base method
+        ################################
     
-        temper_file.append(  '.'.join(traj_files[i].split(".")[0:-1]) + ".temps")
+        n_traj_files = int(helpers.head(GEN_FF + "/traj_list.dat",1)[-1])
+        traj_files   = helpers.head(GEN_FF + "/traj_list.dat",nfiles+1)[1:]
+        temper_file  = []
+    
+        # Get trajectory files
+    
+        if (my_ALC == 0) or ((my_ALC == 1) and (not args["do_cluster"])):
+            for i in range(n_traj_files):
+                traj_files[i] = GEN_FF "/" + traj_files[i].split()[1]
+        else:
+            for i in range(n_traj_files):
+                traj_files[i] = traj_files[i].split()[1]
+                
+        for i in range(n_traj_files):
+    
+            temper_file.append(  '.'.join(traj_files[i].split(".")[0:-1]) + ".temps")
+            
+        ################################
+        # Hierarch
+        ################################
+    
+        if args["do_hierarch"]:
+    
+            subtract(
+                md_driver    = args["hierarch_exe"],
+                method       = "CHIMES",
+                trajectories = traj_files,
+                temperatures = temper_file,
+                parameters   = args["hierarch_files"])
+    
+        ################################
+        # Correction
+        ################################
+    
+        if args["do_correction"]:
+            
+            subtract(
+                md_driver    = args["correction_exe"],
+                method       = args["correction_method"],
+                trajectories = traj_files,
+                temperatures = temper_file,
+                parameters   = args["correction_files"])
+            
+        ################################
+        # 3. Set up and submit the .cmd file for the job
+        ################################
+    
+        os.chdir(GEN_FF)                    
+    
+    
+        # Create the task string
+    
+        job_task = "-n " + repr(int(args["job_nodes"])*int(args["job_ppn"])) + " " + args["job_executable"] + " fm_setup.in | tee fm_setup.log"
+    
+        if args["job_system"] == "slurm":
+            job_task = "srun "   + job_task
+        else:
+            job_task = "mpirun " + job_task    
+    
+        # Launch the job
+    
+        lsq_jobid_1 = helpers.create_and_launch_job(
+            job_name       =      args["job_name"     ] ,
+            job_email      =     args["job_email"    ] ,
+            job_nodes      =  str(args["job_nodes"   ]),
+            job_ppn        =  str(args["job_ppn"     ]),
+            job_walltime   =  str(args["job_walltime"]),
+            job_queue      =      args["job_queue"   ] ,
+            job_account    =      args["job_account" ] ,
+            job_executable =      job_task,
+            job_modules    =      args["job_modules"],
+            job_system     =      args["job_system"  ] ,
+            job_file       = "run_chimeslsq.cmd")
+    
+        lsq_jobs.append(lsq_jobid_1.split()[0])
         
-    ################################
-    # Hierarch
-    ################################
+        os.chdir("..")
 
-    if args["do_hierarch"]:
-
-        subtract(
-            md_driver    = args["hierarch_exe"],
-            method       = "CHIMES",
-            trajectories = traj_files,
-            temperatures = temper_file,
-            parameters   = args["hierarch_files"])
-    
-    ################################
-    # Correction
-    ################################
-    
-    if args["do_correction"]:
-        
-        subtract(
-            md_driver    = args["correction_exe"],
-            method       = args["correction_method"],
-            trajectories = traj_files,
-            temperatures = temper_file,
-            parameters   = args["correction_files"])
-        
-    ################################
-    # 3. Set up and submit the .cmd file for the job
-    ################################
-    
-    os.chdir("GEN_FF")                    
-
-    
-    # Create the task string
-    
-    job_task = "-n " + repr(int(args["job_nodes"])*int(args["job_ppn"])) + " " + args["job_executable"] + " fm_setup.in | tee fm_setup.log"
-    
-    if args["job_system"] == "slurm":
-        job_task = "srun "   + job_task
-    else:
-        job_task = "mpirun " + job_task    
-
-    # Launch the job
-    
-    lsq_jobid_1 = helpers.create_and_launch_job(
-        job_name       =      args["job_name"     ] ,
-        job_email      =     args["job_email"    ] ,
-        job_nodes      =  str(args["job_nodes"   ]),
-        job_ppn        =  str(args["job_ppn"     ]),
-        job_walltime   =  str(args["job_walltime"]),
-        job_queue      =      args["job_queue"   ] ,
-        job_account    =      args["job_account" ] ,
-        job_executable =      job_task,
-        job_modules    =      args["job_modules"],
-        job_system     =      args["job_system"  ] ,
-        job_file       = "run_chimeslsq.cmd")
-
-    os.chdir("..")
-
-    return lsq_jobid_1.split()[0]
+    return lsq_jobs
     
 
 def solve_amat(my_ALC, **kwargs):  
@@ -871,8 +955,8 @@ def solve_amat(my_ALC, **kwargs):
     # 0. Set up an argument parser
     ################################
     
-    default_keys   = [""]*23
-    default_values = [""]*23
+    default_keys   = [""]*24
+    default_values = [""]*24
     
     # Weights
     
@@ -892,6 +976,8 @@ def solve_amat(my_ALC, **kwargs):
     default_keys[7 ] = "regression_var"    ; default_values[7 ] =     "1.0E-4"    # SVD eps or Lasso alpha
     default_keys[8 ] = "regression_nrm"    ; default_values[8 ] =     "True"      # Normalizes the a-mat by default ... may not give best result
     default_keys[9 ] = "split_files"       ; default_values[9 ] =     False       # !!! UNUSED
+    default_keys[24] = "n_hyper_sets"      ; default_values[24] =     1                      # Number of unique fm_setup.in files; allows fitting, e.g., multiple overlapping models to the same data
+    
     
     # Overall job controls
     
@@ -915,6 +1001,17 @@ def solve_amat(my_ALC, **kwargs):
     # 1. Generate weights for the current ALC's trajectory
     ################################
     
+    if int(args["n_hyper_sets"]) > 1: # Then we need to collate our GEN_FF-X folders into a single GEN_FF
+    
+        helpers.run_bash_cmnd("mkdir GEN_FF")
+        
+        helpers.run_bash_cmnd("cp GEN_FF-1/b.txt GEN_FF")
+        for i in int(range(args["n_hyper_sets"])):
+              
+            helpers.run_bash_cmnd("paste  GEN_FF/A.txt GEN_FF-" + str(i) + "/A.txt > tmp")
+            helpers.run_bash_cmnd("mv tmp GEN_FF/A.txt")                
+    
+
     os.chdir("GEN_FF")
     helpers.run_bash_cmnd("rm -f weights.dat")
     
@@ -1063,6 +1160,9 @@ def solve_amat(my_ALC, **kwargs):
         
     job_task += " --b b_comb.txt --weights weights_comb.dat --algorithm " + args["regression_alg"]  + " "
     
+    if int(args["n_hyper_sets"]) > 1:
+        job_task += "--hyper_sets True " 
+          
     if "dlasso" in args["regression_alg"]:
         job_task += "--active True " 
         job_task += "--alpha " + str(args["regression_var"])  + " "    
