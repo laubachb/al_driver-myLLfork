@@ -7,16 +7,16 @@
 ATOM_TYPES     = ["Si","O"]
 NO_CASES       = 1
 
-DRIVER_DIR     = "/home/rklinds/codes/al_driver-myLLfork"
-WORKING_DIR    = "/nfs/turbo/coe-rklinds/test_cp2k/bulk_MFI/temp_1000K-compr_0perc-shear_0deg/test_ald/"
-CHIMES_SRCDIR  = "/home/rklinds/codes/chimes_lsq-myLLfork/src/"
+DRIVER_DIR     = "/home/aalmohri/Codes/al_driver-MyLLfork/"
+WORKING_DIR    = "/gpfs/accounts/rklinds_root/rklinds0/aalmohri/TestingCP2K_SafaBug_3/"
+CHIMES_SRCDIR  = "/home/aalmohri/Codes/chimes_lsq-MyLLfork/src/"
 
 ################################
 #### HPC Settings
 ################################
 
 HPC_ACCOUNT = "rklinds1"
-HPC_PYTHON  = "/sw/pkgs/arc/python3.9-anaconda/2021.11/bin/python"
+HPC_PYTHON  = "/sw/pkgs/arc/python3.9-anaconda/2021.11/bin/python3.9"
 
 ################################
 ##### ChIMES LSQ
@@ -77,4 +77,5 @@ CP2K_MEM     = 128
 CP2K_QUEUE   = "standard"
 CP2K_MODULES = "intel/2022.1.2 impi/2021.5.1 mkl/2022.0.2"
 CP2K_DATADIR = "/nfs/turbo/coe-rklinds/software/cp2k/data/"
+
 
