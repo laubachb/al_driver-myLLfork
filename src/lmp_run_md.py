@@ -281,8 +281,8 @@ def run_md(my_ALC, my_case, my_indep, *argv, **kwargs):
     
     ### ...kwargs
     
-    default_keys   = [""]*16
-    default_values = [""]*16
+    default_keys   = [""]*17
+    default_values = [""]*17
 
     # MD specific controls
 
@@ -290,7 +290,8 @@ def run_md(my_ALC, my_case, my_indep, *argv, **kwargs):
     default_keys[1 ] = "driver_dir"    ; default_values[1 ] = ""                           # Post_proc_lsq*py file... should also include the python command
     default_keys[2 ] = "penalty_pref"  ; default_values[2 ] = 1.0E6                        # Penalty function pre-factor
     default_keys[3 ] = "penalty_dist"  ; default_values[3 ] = 0.02                         # Pentaly function kick-in distance
-    default_keys[4 ] = "chimes_exe  "  ; default_values[4 ] = None                         # Unused by this function
+    default_keys[4 ] = "chimes_exe"    ; default_values[4 ] = None                         # Unused by this function
+    default_keys[16] = "n_hyper_sets"  ; default_values[16] = 1                            # Number of unique fm_setup.in files; allows fitting, e.g., multiple overlapping models to the same data
     
     # Overall job controls
 
@@ -318,9 +319,19 @@ def run_md(my_ALC, my_case, my_indep, *argv, **kwargs):
     helpers.run_bash_cmnd("rm -rf " + my_md_path)
     helpers.run_bash_cmnd("mkdir -p " + my_md_path)
 
-    #helpers.run_bash_cmnd("cp "+ ' '.join(glob.glob(args["basefile_dir"] + "/*"  )) + " " + my_md_path)
     helpers.run_bash_cmnd("cp "+ ' '.join(glob.glob(args["basefile_dir"] + "/case-" + str(my_case) + ".indep-" + str(my_indep) + "*" )) + " " + my_md_path)
-    helpers.run_bash_cmnd("cp GEN_FF/params.txt.reduced " + my_md_path)
+
+    for i in range(int(args["n_hyper_sets"])):
+    
+        GEN_FF = "GEN_FF"
+        params = "params.txt.reduced"
+        
+        if int(args["n_hyper_sets"]) > 1:
+        
+            GEN_FF = "GEN_FF-" + str(i)"
+            params = str(i) + "params.txt.reduced"
+        
+        helpers.run_bash_cmnd("cp " + GEN_FF + "/params.txt.reduced " + my_md_path + "/" + params)
     
 
     ################################
@@ -329,32 +340,42 @@ def run_md(my_ALC, my_case, my_indep, *argv, **kwargs):
     
     os.chdir(my_md_path)
 
-
-    ifstream   = open("params.txt.reduced",'r')
-    paramsfile = ifstream.readlines()
-
-    ofstream = open("tmp",'w')
+    for i in range(int(args["n_hyper_sets"])):
     
-    found = False
+        GEN_FF = "GEN_FF"
+        params = "params.txt.reduced"
         
-    for i in range(len(paramsfile)):
-    
-        if found:
-            ofstream.write(paramsfile[i])
-            ofstream.write("PAIR CHEBYSHEV PENALTY DIST:    " + str(args["penalty_dist"]) + '\n')
-            ofstream.write("PAIR CHEBYSHEV PENALTY SCALING: " + str(args["penalty_pref"]) + '\n\n')
+        if int(args["n_hyper_sets"]) > 1:
+        
+            GEN_FF = "GEN_FF-" + str(i)"
+            params = str(i) + "params.txt.reduced"
+            
+        ifstream   = open(params,'r')
+        paramsfile = ifstream.readlines()
 
-            found = False
-        else:
+        ofstream = open("tmp",'w')
+
+        found = False
             
-            ofstream.write(paramsfile[i])
-            
-            if "FCUT TYPE" in paramsfile[i]:
-                found  = True
-    ofstream.close()
-    helpers.run_bash_cmnd("mv tmp params.txt.reduced")
+        for i in range(len(paramsfile)):
+
+            if found:
+                ofstream.write(paramsfile[i])
+                ofstream.write("PAIR CHEBYSHEV PENALTY DIST:    " + str(args["penalty_dist"]) + '\n')
+                ofstream.write("PAIR CHEBYSHEV PENALTY SCALING: " + str(args["penalty_pref"]) + '\n\n')
     
+                found = False
+            else:
+                
+                ofstream.write(paramsfile[i])
+                
+                if "FCUT TYPE" in paramsfile[i]:
+                    found  = True
+                    
+        ofstream.close()
+        helpers.run_bash_cmnd("mv tmp " + params)
     
+     
     ################################
     # 3. Post-process the run_md.in file
     ################################
