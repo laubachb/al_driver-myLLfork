@@ -283,7 +283,7 @@ def check_DFTB(user_config):
 
         # Memory per node to to use for a DFTB calculation
 
-        if ((user_config.BULK_QM_METHOD == "DFTB") or (user_config.IGAS_QM_METHOD == "DFTB")):
+        if ((user_config.BULK_QM_METHOD == "DFTB+") or (user_config.IGAS_QM_METHOD == "DFTB+")):
             print("WARNING: Option config.DFTB_MEM was not set")
             #print("         Will use a value of 128 (GB)")
 
@@ -1611,7 +1611,7 @@ def verify(user_config):
         user_config.LMP_QUEUE   = None
         user_config.LMP_MODULES = None
         user_config.LMP_EXE     = None
-
+        user_config.LMP_UNITS   = None
 
 
 
