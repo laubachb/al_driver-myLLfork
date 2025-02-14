@@ -1031,7 +1031,7 @@ int main(int argc, char** argv)	// The main idea: We're going to process the tra
 		cout << endl << "	...Building clusters based on TIGHT constraints..." << endl;
 		
 		vector<CLUSTER> TIGHT_CLUSTERS;
-	
+
 		BOND_CRIT TIGHT_CRITERIA(CRIT_FILE[0]);
 		
 		DO_CLUSTER(TIGHT_CRITERIA, TRAJ_FRAME, TIGHT_CLUSTERS);
