@@ -419,7 +419,7 @@ def main(args):
                 # Compute cluster energies
             
                 active_jobs = cluster.get_repo_energies(
-                        base_runfile   = config.WORKING_DIR + "ALL_BASE_FILES/" + "run_md.cluster",
+                        base_runfile   = config.WORKING_DIR + "ALL_BASE_FILES/" + "CLUSTER_BASEFILES/" "run_md.cluster",
                         driver_dir     = config.DRIVER_DIR,
                         job_email      = config.HPC_EMAIL,
                         job_ppn        = str(config.HPC_PPN),
