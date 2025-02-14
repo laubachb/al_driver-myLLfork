@@ -103,8 +103,9 @@ def get_repo_energies(*argv, **kwargs):
     active_jobs = []
     
     #print "job: ", run_cmnd
-    
-    active_jobs.append(int(helpers.run_bash_cmnd(run_cmnd).split()[0]))
+    # Originally was citing "Submitted" but changed it to jobID
+    # elpers.run_bash_cmnd(run_cmnd).split() = ['Submitted', 'batch', 'job', '3999118']
+    active_jobs.append(int(helpers.run_bash_cmnd(run_cmnd).split()[-1]))
 
     
     ################################
