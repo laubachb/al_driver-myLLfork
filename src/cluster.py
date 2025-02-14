@@ -179,7 +179,7 @@ def get_repo_energies(*argv, **kwargs):
     
 
 
-def list_clusters(CFG_REPO, *argv): # This is where we need to start caring about the number of atoms types and thier order!
+def list_clusters(CFG_REPO, *argv): # This is where we need to start caring about the number of atoms types and their order!
 
     """ 
     
