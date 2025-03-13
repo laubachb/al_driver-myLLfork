@@ -49,7 +49,8 @@ DO_CLUSTER    = True
 MAX_CLUATM    = 100 # Maximum number of atoms to allow in a cluster
 TIGHT_CRIT    = WORKING_DIR + "ALL_BASE_FILES/CLUSTER_BASEFILES/tight_bond_crit.dat"
 LOOSE_CRIT    = WORKING_DIR + "ALL_BASE_FILES/CLUSTER_BASEFILES/loose_bond_crit.dat"
-CLU_CODE      = DRIVER_DIR  + "/utilities/new_ts_clu.cpp"
+# CLU_CODE      = DRIVER_DIR  + "/utilities/new_ts_clu.cpp"
+CLU_CODE      = DRIVER_DIR  + "/examples/ts_debug/new_ts_clu.cpp"
 
 ################################
 ##### Molecular Dynamics
