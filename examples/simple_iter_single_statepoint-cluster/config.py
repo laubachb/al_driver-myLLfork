@@ -6,8 +6,8 @@
 
 EMAIL_ADD = "blaubach@umich.edu"
 
-ATOM_TYPES     = ["C"]
-NO_CASES       = 1
+ATOM_TYPES     = ["C", "N"]
+NO_CASES       = 3
 
 DRIVER_DIR     = "/p/lustre2/laubach2/al_driver-myLLfork"
 WORKING_DIR    = "/p/lustre2/laubach2/al_driver-myLLfork/examples/simple_iter_single_statepoint-cluster/"

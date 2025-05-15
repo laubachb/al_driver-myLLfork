@@ -299,6 +299,7 @@ void FRAME::READ(ifstream & TRAJ_FILE)
 	STR_TO_VEC_OF_STRS(LINE_STR, LINE_VEC);
 
 	NATOMS = STR_TO_INT(LINE_VEC[0]);
+	cout << "NATOMS = " << NATOMS << endl;
 	COORDS.resize(NATOMS);
 	PARENT.resize(NATOMS);
 	
@@ -306,7 +307,7 @@ void FRAME::READ(ifstream & TRAJ_FILE)
 	
 	getline(TRAJ_FILE,LINE_STR);
 	STR_TO_VEC_OF_STRS(LINE_STR, LINE_VEC);
-
+	cout << "Line vector size: " << LINE_VEC.size() << endl;
 	if(LINE_VEC.size() < 3)
 	{
 		cout << "ERROR: at least 3 items (boxlengths)." << endl;
@@ -314,10 +315,17 @@ void FRAME::READ(ifstream & TRAJ_FILE)
 		cout << "Exiting. " << endl;
 		exit(0);
 	}
-	
-	BOXDIM.X = STR_TO_DOUB(LINE_VEC[1]); // Changed from 0 -> 1
-	BOXDIM.Y = STR_TO_DOUB(LINE_VEC[5]); // Changed from 1 -> 5
-	BOXDIM.Z = STR_TO_DOUB(LINE_VEC[9]); // Changed from 2 -> 9
+	if(LINE_VEC.size() == 3){
+		BOXDIM.X = STR_TO_DOUB(LINE_VEC[0]); // Changed from 0 -> 1
+		BOXDIM.Y = STR_TO_DOUB(LINE_VEC[1]); // Changed from 1 -> 5
+		BOXDIM.Z = STR_TO_DOUB(LINE_VEC[2]); // Changed from 2 -> 9
+	}
+	else{
+		BOXDIM.X = STR_TO_DOUB(LINE_VEC[1]); // Changed from 0 -> 1
+		BOXDIM.Y = STR_TO_DOUB(LINE_VEC[5]); // Changed from 1 -> 5
+		BOXDIM.Z = STR_TO_DOUB(LINE_VEC[9]); // Changed from 2 -> 9
+	}
+	cout << "BOXDIMS: " << BOXDIM.X << BOXDIM.Y << BOXDIM.Z << endl;
 	
 	// Determine the coordinates 
 	
@@ -1013,6 +1021,8 @@ int main(int argc, char** argv)	// The main idea: We're going to process the tra
 		////////////////////////////////////////////////////////////
 		
 		FRAME TRAJ_FRAME;
+
+		cout << "   Created TRAJ_FRAME object" << endl;
 		
 		TRAJ_FRAME.READ(INTRAJ);
 		cout << "	Original frame has natoms: " << TRAJ_FRAME.COORDS.size() << endl;
