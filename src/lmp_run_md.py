@@ -40,6 +40,11 @@ def writeframe(frame, badness, badstream0, badstream1, badstream2):
         
     xyz_text = []
     xyz_text.append(frame[3]) # Number of atoms
+
+    if (float(boxl_x.split()[-2]) < 0) or (float(boxl_y.split()[-2]) < 0) or (float(boxl_z.split()[-2]) < 0):
+        print("ERROR: Box does not start at (0,0,0) in frame:", frame[1])
+        print("exiting...")
+        exit(0)
     
     boxl_x = frame[5]; boxl_x = boxl_x.split()
     boxl_y = frame[6]; boxl_y = boxl_y.split()
